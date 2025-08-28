@@ -174,6 +174,13 @@ export default function DashboardPlayer() {
                 >
                     Demo test
                 </button>
+                <br />
+                <button
+                    onClick={() => (window.location.href = `/cee-practice`)}
+                    className="w-full text-left px-3 py-2 rounded bg-green-600 hover:bg-green-500 flex items-center gap-2"
+                >
+                    CEE Practice
+                </button>
 
                 <div className="mt-8 space-y-3 w-full">
                     <button

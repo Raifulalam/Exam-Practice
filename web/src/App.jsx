@@ -9,6 +9,7 @@ import "./index.css";
 import { UserProvider } from "./Auth/UserContext";
 import PracticePlay from "./components/PracticePlay";
 import PracticeDemo from "./components/Demo";
+import QuizApp from "./components/QuizApp";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           {/* Catch-all redirect */}
           <Route path="/practice/:id" element={<PracticePlay />} />
           <Route path="/demo" element={<PracticeDemo />} />
+          <Route path="/cee-practice" element={<QuizApp />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

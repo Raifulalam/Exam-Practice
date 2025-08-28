@@ -24,6 +24,8 @@ app.use("/api/auth", authRoutes);
 const practiceRoutes = require("./routes/practice");
 app.use('/practice', practiceRoutes)
 app.use("/api/practice-sets", require("./routes/practiceSet"));
+app.use("/api", require("./routes/score"));
+app.use("/api/cee", require("./routes/ceeScoreRoutes"));
 
 mongoose
     .connect(process.env.MONGO_URI, {
