@@ -1,0 +1,117 @@
+/* Background Gradient */
+.landing-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #4f46e5, #9333ea, #ec4899);
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Title */
+.landing-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+/* Subtitle */
+.landing-subtitle {
+    font-size: 1.2rem;
+    max-width: 700px;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+/* Features Grid */
+.features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    width: 100%;
+    max-width: 1000px;
+}
+
+@media (min-width: 768px) {
+    .features {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Feature Card */
+.feature-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, background 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.feature-card h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 0.9rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-primary {
+    background: #facc15;
+    color: #1f2937;
+}
+
+.btn-primary:hover {
+    background: #fde047;
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background: #ffffff;
+    color: #6d28d9;
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+    transform: scale(1.05);
+}
+
+/* About Section */
+.about {
+    max-width: 700px;
+    margin-top: 2rem;
+}
+
+.about h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.about p {
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
