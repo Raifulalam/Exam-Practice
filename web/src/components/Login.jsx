@@ -28,6 +28,7 @@ export default function Login() {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("role", data.role);
 
+
                 // Small delay for UX
                 setTimeout(() => {
                     if (data.role === "host") navigate("/dashboard/host");
@@ -92,8 +93,8 @@ export default function Login() {
                     <div
                         onClick={() => setRole("host")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "host"
-                                ? "border-indigo-500 bg-indigo-50"
-                                : "border-gray-300 hover:border-indigo-300"
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-gray-300 hover:border-indigo-300"
                             }`}
                     >
                         <Monitor
@@ -112,8 +113,8 @@ export default function Login() {
                     <div
                         onClick={() => setRole("player")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "player"
-                                ? "border-indigo-500 bg-indigo-50"
-                                : "border-gray-300 hover:border-indigo-300"
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-gray-300 hover:border-indigo-300"
                             }`}
                     >
                         <User

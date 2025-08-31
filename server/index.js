@@ -1,3 +1,5 @@
+
+
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -26,6 +28,9 @@ app.use('/practice', practiceRoutes)
 app.use("/api/practice-sets", require("./routes/practiceSet"));
 app.use("/api", require("./routes/score"));
 app.use("/api/cee", require("./routes/ceeScoreRoutes"));
+const gameRoutes = require("./routes/gameRoutes");
+app.use("/api/games", gameRoutes);
+
 
 mongoose
     .connect(process.env.MONGO_URI, {

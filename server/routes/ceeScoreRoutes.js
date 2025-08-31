@@ -32,20 +32,36 @@ router.post("/score", auth(), async (req, res) => {
     }
 });
 
-// Get my scores
-// Get my scores
+// Get my scores + stats
 router.get("/my-scores", auth(), async (req, res) => {
     try {
         const scores = await CeeScore.find({ user: req.user.id })
             .populate("user", "name email")
             .sort({ date: -1 });
-        res.json({ scores }); // wrap in object
+
+        // Compute stats
+        const totalAttempts = scores.reduce((acc, s) => acc + s.totalAttempt, 0);
+        const totalQuestions = scores.reduce((acc, s) => acc + s.totalQuestion, 0);
+        const highestScore = scores.reduce((max, s) => (s.score > max ? s.score : max), 0);
+        const avgScore = scores.length
+            ? (scores.reduce((acc, s) => acc + s.score, 0) / scores.length).toFixed(2)
+            : 0;
+
+        const stats = {
+            totalAttempts,
+            totalQuestions,
+            highestScore,
+            avgScore,
+            totalSets: scores.length,
+            scores, // keep the full score list
+        };
+
+        res.json(stats);
     } catch (err) {
         console.error("Error fetching scores:", err);
         res.status(500).json({ msg: "Server error while fetching scores" });
     }
 });
-
 
 // Admin: get all scores
 router.get("/all-scores", auth("admin"), async (req, res) => {

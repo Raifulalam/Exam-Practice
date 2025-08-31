@@ -5,6 +5,7 @@ import { User, Monitor, Loader2 } from "lucide-react";
 export default function Register() {
     const navigate = useNavigate();
     const [role, setRole] = useState("player");
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -19,19 +20,17 @@ export default function Register() {
             const res = await fetch("http://localhost:5000/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, role }),
+                body: JSON.stringify({ name, email, password, role }),
             });
 
             const data = await res.json();
-            console.log("Backend response:", data, res.status); // 🔍 Debug
+            console.log("Backend response:", data, res.status);
 
             if (!res.ok) {
-                // Show detailed backend error if available
                 setError(data.msg || data.error || `Error ${res.status}`);
                 return;
             }
 
-            // Success 🎉
             alert("Registration successful! Please login.");
             navigate("/login");
         } catch (err) {
@@ -41,7 +40,6 @@ export default function Register() {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-green-400 via-blue-500 to-purple-600">
@@ -58,6 +56,15 @@ export default function Register() {
                         {error}
                     </div>
                 )}
+
+                <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full mb-4 p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+                />
 
                 <input
                     type="email"
@@ -84,21 +91,17 @@ export default function Register() {
                     <div
                         onClick={() => setRole("host")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "host"
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-300 hover:border-green-300"
+                                ? "border-green-500 bg-green-50"
+                                : "border-gray-300 hover:border-green-300"
                             }`}
                     >
                         <Monitor
                             size={32}
-                            className={`mb-2 ${role === "host"
-                                ? "text-green-600"
-                                : "text-gray-500"
+                            className={`mb-2 ${role === "host" ? "text-green-600" : "text-gray-500"
                                 }`}
                         />
                         <span
-                            className={`font-semibold ${role === "host"
-                                ? "text-green-600"
-                                : "text-gray-700"
+                            className={`font-semibold ${role === "host" ? "text-green-600" : "text-gray-700"
                                 }`}
                         >
                             Host
@@ -108,21 +111,17 @@ export default function Register() {
                     <div
                         onClick={() => setRole("player")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "player"
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-300 hover:border-green-300"
+                                ? "border-green-500 bg-green-50"
+                                : "border-gray-300 hover:border-green-300"
                             }`}
                     >
                         <User
                             size={32}
-                            className={`mb-2 ${role === "player"
-                                ? "text-green-600"
-                                : "text-gray-500"
+                            className={`mb-2 ${role === "player" ? "text-green-600" : "text-gray-500"
                                 }`}
                         />
                         <span
-                            className={`font-semibold ${role === "player"
-                                ? "text-green-600"
-                                : "text-gray-700"
+                            className={`font-semibold ${role === "player" ? "text-green-600" : "text-gray-700"
                                 }`}
                         >
                             Player
@@ -135,9 +134,7 @@ export default function Register() {
                     disabled={loading}
                     className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition flex justify-center items-center"
                 >
-                    {loading ? (
-                        <Loader2 className="animate-spin mr-2" size={20} />
-                    ) : null}
+                    {loading ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
                     {loading ? "Registering..." : "Register"}
                 </button>
 

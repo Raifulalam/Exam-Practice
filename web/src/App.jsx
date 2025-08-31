@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import DashboardHost from "./components/DashboardHost";
+import DashboardHost from "./components/Dashboard/DashboardHost";
 import DashboardPlayer from "./components/DashboardPlayer";
 import "./index.css";
 import { UserProvider } from "./Auth/UserContext";

@@ -53,27 +53,25 @@ export default function DashboardPlayer() {
             }
         };
 
-        const fetchScores = async () => {
-            try {
-                const res = await fetch("http://localhost:5000/api/scores/my-scores", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data); // { totalAttempts, maxScore, avgScore, scores }
-                } else {
-                    console.error("Failed to fetch scores");
-                }
-            } catch (err) {
-                console.error("Error fetching scores:", err);
-            }
-        };
 
         if (token) {
             fetchPracticeSets();
             fetchScores();
         }
     }, [token]);
+    const fetchScores = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch("http://localhost:5000/api/cee/my-scores", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (res.ok) setStats(data); // assuming backend returns { scores: [], maxScore: x, avgScore: y }
+        } catch (err) {
+            console.error("Error fetching history:", err);
+        }
+    };
+
 
     // 📌 Fetch random questions from backend (auto mode)
     const fetchAutoQuestions = async () => {
@@ -248,7 +246,7 @@ export default function DashboardPlayer() {
                         {stats && (
                             <div className="mt-4 text-center">
                                 <p>📊 Total Attempts: {stats.totalAttempts}</p>
-                                <p>🏆 Highest Score: {stats.maxScore}</p>
+                                <p>🏆 Highest Score: {stats.highestScore}</p>
                                 <p>📈 Average Score: {stats.avgScore}</p>
                             </div>
                         )}
@@ -278,7 +276,7 @@ export default function DashboardPlayer() {
                         </h2>
                         <p className="mt-2 text-lg">
                             🥇 Highest Score →{" "}
-                            <span className="font-semibold">{stats.maxScore}</span>
+                            <span className="font-semibold">{stats.highestScore}</span>
                         </p>
                     </div>
                 )}
