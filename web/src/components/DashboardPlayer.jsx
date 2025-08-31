@@ -179,6 +179,13 @@ export default function DashboardPlayer() {
                 >
                     CEE Practice
                 </button>
+                <br />
+                <button
+                    onClick={() => (window.location.href = `/gamelist`)}
+                    className="w-full text-left px-3 py-2 rounded bg-green-600 hover:bg-green-500 flex items-center gap-2"
+                >
+                    Questons List
+                </button>
 
                 <div className="mt-8 space-y-3 w-full">
                     <button

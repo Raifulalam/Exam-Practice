@@ -13,6 +13,12 @@ const GameSchema = new mongoose.Schema(
         title: { type: String, required: true },
         description: String,
         questions: [QuestionSchema],
+        gameCode: {
+            type: String,
+            required: true,
+            unique: true
+        }
+
     },
     { timestamps: true }
 );

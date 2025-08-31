@@ -10,6 +10,10 @@ import { UserProvider } from "./Auth/UserContext";
 import PracticePlay from "./components/PracticePlay";
 import PracticeDemo from "./components/Demo";
 import QuizApp from "./components/QuizApp";
+import Players from "./components/Dashboard/Player";
+import Analytics from "./components/Dashboard/Analytics";
+import GamesList from "./components/GamesList";
+import AttemptGame from "./components/Attemptgames";
 
 function App() {
   return (
@@ -28,7 +32,11 @@ function App() {
           <Route path="/practice/:id" element={<PracticePlay />} />
           <Route path="/demo" element={<PracticeDemo />} />
           <Route path="/cee-practice" element={<QuizApp />} />
+          <Route path="/players" element={<Players />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/gamelist" element={<GamesList />} />
+          <Route path="/attempt/:gameCode" element={<AttemptGame />} />
         </Routes>
       </Router>
     </UserProvider>

@@ -50,19 +50,42 @@ export default function CreateGameModal({ showModal, setShowModal }) {
         try {
             setLoading(true);
             const token = localStorage.getItem("token");
-            console.log(token)
+
+            // 🎯 Generate random 6-digit code
+            const gameCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            let payload = {
+                title,
+                description,
+                gameCode,
+            };
+
+            if (gameType === "quiz") {
+                payload.gameType = "quiz";
+                payload.questions = questions.map(q => ({
+                    question: q.question,
+                    options: q.options,
+                    answer: q.options[q.correctIndex], // ✅ store correct answer
+                }));
+            } else if (gameType === "exam") {
+                payload.gameType = "quiz"; // exam works like quiz with text answer
+                payload.questions = questions.map(q => ({
+                    question: q.question,
+                    answer: q.answer,
+                }));
+            } else if (gameType === "truth_dare") {
+                payload.gameType = "truth"; // or "dare", backend requires split
+                payload.truths = questions.filter(q => q.truthOrDare === "truth").map(q => q.question);
+                payload.dares = questions.filter(q => q.truthOrDare === "dare").map(q => q.question);
+            }
+
             const res = await fetch("http://localhost:5000/api/games/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    gameType,
-                    title,
-                    description,
-                    questions,
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
@@ -71,7 +94,7 @@ export default function CreateGameModal({ showModal, setShowModal }) {
             }
 
             const data = await res.json();
-            alert("✅ Game Saved Successfully!");
+            alert(`✅ Game Saved Successfully!\nYour Game Code: ${gameCode}`);
             console.log("Game created:", data);
 
             setQuestions([]);
@@ -85,6 +108,7 @@ export default function CreateGameModal({ showModal, setShowModal }) {
             setLoading(false);
         }
     };
+
 
     return (
         showModal && (
