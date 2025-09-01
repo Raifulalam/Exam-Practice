@@ -46,7 +46,7 @@ router.get("/mine", auth(["host"]), async (req, res) => {
 
 
 // ✅ Player attempts game
-router.post("/:gameId/attempt", auth, async (req, res) => {
+router.post("/:gameId/attempt", auth(["host"]), async (req, res) => {
     try {
         const { responses } = req.body; // [{questionId, answer}, ...]
 
@@ -181,7 +181,7 @@ router.get("/host/stats", auth(["host"]), async (req, res) => {
         const myGames = await Game.find({ host: req.user.id });
         const gameCount = myGames.length;
 
-        // fetch all attempts
+        // fetch all attempts for the host's games
         const attempts = await GameResponse.find({ game: { $in: myGames.map(g => g._id) } })
             .populate("player", "name email")
             .populate("game", "title gameCode");
@@ -198,16 +198,46 @@ router.get("/host/stats", auth(["host"]), async (req, res) => {
             };
         });
 
+        // Calculate top scorer
+        let topScorer = null;
+        if (attempts.length > 0) {
+            const sortedByScore = [...attempts].sort((a, b) => b.score - a.score);
+            topScorer = {
+                playerId: sortedByScore[0].player._id,
+                name: sortedByScore[0].player.name,
+                email: sortedByScore[0].player.email,
+                score: sortedByScore[0].score
+            };
+        }
+
+        // Calculate top participant (most attempts)
+        let topParticipant = null;
+        if (attempts.length > 0) {
+            const attemptsCountMap = {};
+            attempts.forEach(a => {
+                const id = a.player._id.toString();
+                if (!attemptsCountMap[id]) attemptsCountMap[id] = { ...a.player._doc, attempts: 0 };
+                attemptsCountMap[id].attempts++;
+            });
+            const participantsArray = Object.values(attemptsCountMap);
+            participantsArray.sort((a, b) => b.attempts - a.attempts);
+            topParticipant = participantsArray[0];
+        }
+
         return res.json({
             gameCount,
             totalAttempts: attempts.length,
-            gameStats
+            gameStats,
+            topScorer,
+            topParticipant
         });
+
     } catch (error) {
         console.error("Error fetching host stats:", error);
         res.status(500).json({ error: "Failed to fetch host stats" });
     }
 });
+
 
 
 // GET /api/games/join/:code
@@ -261,6 +291,18 @@ router.post("/attempt/code/:gameCode", auth(["player"]), async (req, res) => {
         res.status(500).json({ error: "Failed to save attempt" });
     }
 });
+router.get("/attempts", async (req, res) => {
+    try {
+        // populate player details instead of just player ID
+        const attempts = await GameResponse.find()
+            .populate("player", "name email") // fetch player info
+            .populate("game", "title"); // optional: fetch game title
 
+        res.json(attempts);
+    } catch (err) {
+        console.error("Error fetching attempts:", err);
+        res.status(500).json({ error: "Failed to fetch attempts" });
+    }
+});
 
 module.exports = router;

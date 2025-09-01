@@ -35,11 +35,7 @@ export default function HostSidebar() {
                     label="Dashboard"
                     onClick={() => (window.location.href = `/dashboard/host`)}
                 />
-                <SidebarButton
-                    icon={<Gamepad2 />}
-                    label="Demo Test"
-                    onClick={() => (window.location.href = "/demo")}
-                />
+
                 <SidebarButton
                     icon={<BookOpen />}
                     label="CEE Practice"
@@ -47,7 +43,7 @@ export default function HostSidebar() {
                 />
                 <SidebarButton
                     icon={<Users />}
-                    label="Players"
+                    label="Leaderboard"
                     onClick={() => (window.location.href = "/players")}
                 />
                 <SidebarButton
