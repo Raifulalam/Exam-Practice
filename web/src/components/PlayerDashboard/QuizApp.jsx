@@ -1,7 +1,7 @@
 // src/components/CEEPractice.js
 import React, { useState, useEffect, useRef, useContext } from "react";
-import questionsData from "../data/cee_nepal_mcq_bank.json";
-import { UserContext } from "../Auth/UserContext";
+import questionsData from "../../data/cee_nepal_mcq_bank.json";
+import { UserContext } from "../../Auth/UserContext";
 
 const CEEPractice = () => {
     const { user } = useContext(UserContext);

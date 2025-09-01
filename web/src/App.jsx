@@ -4,16 +4,18 @@ import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import DashboardHost from "./components/Dashboard/DashboardHost";
-import DashboardPlayer from "./components/DashboardPlayer";
+import DashboardPlayer from "./components/PlayerDashboard/DashboardPlayer";
 import "./index.css";
 import { UserProvider } from "./Auth/UserContext";
-import PracticePlay from "./components/PracticePlay";
-import PracticeDemo from "./components/Demo";
-import QuizApp from "./components/QuizApp";
+import PracticePlay from "./components/PlayerDashboard/PracticePlay";
+import PracticeDemo from "./components/PlayerDashboard/Demo";
+import QuizApp from "./components/PlayerDashboard/QuizApp";
 import Players from "./components/Dashboard/Player";
 import Analytics from "./components/Dashboard/Analytics";
-import GamesList from "./components/GamesList";
-import AttemptGame from "./components/Attemptgames";
+import GamesList from "./components/PlayerDashboard/GamesList";
+import AttemptGame from "./components/PlayerDashboard/Attemptgames";
+import MyAttempts from "./components/PlayerDashboard/MyScore";
+import CreatePracticeSetModal from "./components/PlayerDashboard/CreatePracticeSetModel";
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
           <Route path="/gamelist" element={<GamesList />} />
           <Route path="/attempt/:gameCode" element={<AttemptGame />} />
+          <Route path="/myattempt" element={<MyAttempts />} />
+          <Route path="/create-practice" element={<CreatePracticeSetModal />} />
         </Routes>
       </Router>
     </UserProvider>

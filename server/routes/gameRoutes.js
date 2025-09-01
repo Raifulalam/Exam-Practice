@@ -80,13 +80,15 @@ router.post("/:gameId/attempt", auth, async (req, res) => {
 
 
 // ✅ Get attempts of a player
-router.get("/my-attempts", auth, async (req, res) => {
+router.get("/attempts/me", auth(["player"]), async (req, res) => {
     try {
         const attempts = await GameResponse.find({ player: req.user.id })
-            .populate("game", "title gameType gameCode");
-        res.json(attempts);
-    } catch (error) {
-        console.error("Error fetching attempts:", error);
+            .populate("game", "title gameType questions") // populate game title and questions
+            .lean();
+
+        res.json({ attempts });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });
@@ -227,13 +229,13 @@ router.get("/join/:code", async (req, res) => {
 });
 
 // POST /api/games/attempt/code/:gameCode
-router.post("/attempt/code/:gameCode", async (req, res) => {
+router.post("/attempt/code/:gameCode", auth(["player"]), async (req, res) => {
     try {
         const { responses } = req.body; // [{questionId, answer}, ...]
         const game = await Game.findOne({ gameCode: req.params.gameCode });
         if (!game) return res.status(404).json({ error: "Game not found" });
 
-        // Evaluate responses
+        // Evaluate responses (only for quiz)
         let score = 0;
         const evaluatedResponses = responses.map(r => {
             const q = game.questions.find(q => String(q._id) === String(r.questionId));
@@ -245,12 +247,15 @@ router.post("/attempt/code/:gameCode", async (req, res) => {
         // Save attempt
         const attempt = await GameResponse.create({
             game: game._id,
-            player: req.user.id,
+            player: req.user.id, // use decoded user id from token
             responses: evaluatedResponses,
             score
         });
-
-        res.status(201).json({ msg: "Attempt saved", attempt });
+        res.status(201).json({
+            msg: "Attempt saved",
+            attempt,
+            evaluatedResponses // include this for frontend feedback
+        });
     } catch (error) {
         console.error("Error saving attempt:", error);
         res.status(500).json({ error: "Failed to save attempt" });
