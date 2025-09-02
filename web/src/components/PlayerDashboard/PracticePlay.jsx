@@ -42,7 +42,7 @@ export default function PracticePlay() {
             setResult({ correct, total: totalQuestions, totalAttempt, percentage });
 
             // Save to backend
-            const res = await fetch("http://localhost:5000/api/cee/score", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/cee/score", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

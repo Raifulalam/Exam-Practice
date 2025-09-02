@@ -1,43 +1,48 @@
-
-
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const authRoutes = require("./routes/auth");
-
+const cors = require("cors");
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
-
-const cors = require("cors");
 app.use(cors());
+
 app.get('/', (req, res) => {
     console.log("Success");
     res.send("Server is running successfully!");
 });
+
+// Route imports
+const authRoutes = require("./routes/auth");
 const protectedRoutes = require("./routes/protected");
-app.use("/api", protectedRoutes);
-
-// ✅ Correct way to use router
-app.use("/api/auth", authRoutes);
-
 const practiceRoutes = require("./routes/practice");
-app.use('/practice', practiceRoutes)
+const gameRoutes = require("./routes/gameRoutes");
+
+// Route uses
+app.use("/api/auth", authRoutes);
+app.use("/api", protectedRoutes);
+app.use('/practice', practiceRoutes);
 app.use("/api/practice-sets", require("./routes/practiceSet"));
 app.use("/api", require("./routes/score"));
 app.use("/api/cee", require("./routes/ceeScoreRoutes"));
-const gameRoutes = require("./routes/gameRoutes");
 app.use("/api/games", gameRoutes);
 
-
+// ✅ Connect to MongoDB first, then start the server
 mongoose
-    .connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error(err));
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("✅ MongoDB connected");
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
+  });

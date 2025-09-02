@@ -10,7 +10,7 @@ export default function Analytics() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/games/host/stats", {
+                const res = await fetch("https://exam-practice-1.onrender.com/api/games/host/stats", {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },

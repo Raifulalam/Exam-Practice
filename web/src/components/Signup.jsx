@@ -17,7 +17,7 @@ export default function Register() {
         setError("");
 
         try {
-            const res = await fetch("http://localhost:5000/api/auth/register", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password, role }),
@@ -91,8 +91,8 @@ export default function Register() {
                     <div
                         onClick={() => setRole("host")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "host"
-                                ? "border-green-500 bg-green-50"
-                                : "border-gray-300 hover:border-green-300"
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-300 hover:border-green-300"
                             }`}
                     >
                         <Monitor
@@ -111,8 +111,8 @@ export default function Register() {
                     <div
                         onClick={() => setRole("player")}
                         className={`flex-1 cursor-pointer p-4 rounded-xl border-2 flex flex-col items-center transition-all duration-300 ${role === "player"
-                                ? "border-green-500 bg-green-50"
-                                : "border-gray-300 hover:border-green-300"
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-300 hover:border-green-300"
                             }`}
                     >
                         <User

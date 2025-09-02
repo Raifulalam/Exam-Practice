@@ -14,7 +14,7 @@ export default function CreatePracticeSet() {
     // Fetch random auto questions
     const fetchAutoQuestions = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/questions/random", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/questions/random", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
@@ -58,7 +58,7 @@ export default function CreatePracticeSet() {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5000/api/practice-sets", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/practice-sets", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -102,8 +102,8 @@ export default function CreatePracticeSet() {
                 <button
                     onClick={() => setMode("manual")}
                     className={`flex-1 py-2 rounded text-sm sm:text-base ${mode === "manual"
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-200"
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200"
                         }`}
                 >
                     Manual
@@ -114,8 +114,8 @@ export default function CreatePracticeSet() {
                         fetchAutoQuestions();
                     }}
                     className={`flex-1 py-2 rounded text-sm sm:text-base ${mode === "auto"
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-200"
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200"
                         }`}
                 >
                     Auto

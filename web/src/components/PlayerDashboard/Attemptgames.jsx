@@ -24,7 +24,7 @@ export default function AttemptGame() {
                     return;
                 }
 
-                const res = await fetch(`http://localhost:5000/api/games/join/${gameCode}`, {
+                const res = await fetch(`https://exam-practice-1.onrender.com/api/games/join/${gameCode}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -68,7 +68,7 @@ export default function AttemptGame() {
 
         try {
             setSubmitting(true);
-            const res = await fetch(`http://localhost:5000/api/games/attempt/code/${game.gameCode}`, {
+            const res = await fetch(`https://exam-practice-1.onrender.com/api/games/attempt/code/${game.gameCode}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

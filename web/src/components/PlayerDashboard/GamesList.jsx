@@ -9,7 +9,7 @@ export default function GamesList() {
     useEffect(() => {
         const fetchGames = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/games/all", {
+                const res = await fetch("https://exam-practice-1.onrender.comapi/games/all", {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                 });
                 const data = await res.json();

@@ -9,7 +9,7 @@ const PracticeDemo = () => {
     useEffect(() => {
         const fetchDemo = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/practice/demo", {
+                const res = await fetch("https://exam-practice-1.onrender.com/api/practice/demo", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -61,8 +61,8 @@ const PracticeDemo = () => {
                                     <label
                                         key={idx}
                                         className={`block px-4 py-2 rounded-md border cursor-pointer transition ${answers[q.id] === opt
-                                                ? "bg-blue-500 text-white border-blue-600"
-                                                : "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                                            ? "bg-blue-500 text-white border-blue-600"
+                                            : "bg-gray-100 hover:bg-gray-200 border-gray-300"
                                             }`}
                                     >
                                         <input

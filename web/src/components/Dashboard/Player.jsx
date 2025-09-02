@@ -8,7 +8,7 @@ export default function Player() {
     useEffect(() => {
         const fetchAttempts = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/games/attempts");
+                const res = await fetch("https://exam-practice-1.onrender.com/api/games/attempts");
                 if (!res.ok) throw new Error("Failed to fetch attempts");
 
                 const data = await res.json();

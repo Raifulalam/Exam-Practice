@@ -11,10 +11,10 @@ export default function DashboardHost() {
         const fetchData = async () => {
             try {
                 const [statsRes, gamesRes] = await Promise.all([
-                    fetch("http://localhost:5000/api/games/host/stats", {
+                    fetch("https://exam-practice-1.onrender.com/api/games/host/stats", {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                     }),
-                    fetch("http://localhost:5000/api/games/mine", {
+                    fetch("https://exam-practice-1.onrender.com/api/games/mine", {
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                     })
                 ]);

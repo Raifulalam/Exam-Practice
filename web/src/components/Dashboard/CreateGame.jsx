@@ -79,7 +79,7 @@ export default function CreateGameModal({ showModal, setShowModal }) {
                 payload.dares = questions.filter(q => q.truthOrDare === "dare").map(q => q.question);
             }
 
-            const res = await fetch("http://localhost:5000/api/games/create", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/games/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

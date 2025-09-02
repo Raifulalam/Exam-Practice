@@ -31,7 +31,7 @@ export default function DashboardPlayer() {
 
         const fetchPracticeSets = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/practice-sets", {
+                const res = await fetch("https://exam-practice-1.onrender.com/api/practice-sets", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) setPracticeSets(await res.json());
@@ -42,7 +42,7 @@ export default function DashboardPlayer() {
 
         const fetchScores = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/cee/my-scores", {
+                const res = await fetch("https://exam-practice-1.onrender.com/api/cee/my-scores", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();

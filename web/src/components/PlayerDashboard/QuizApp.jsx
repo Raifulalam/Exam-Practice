@@ -30,7 +30,7 @@ const CEEPractice = () => {
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/cee/my-scores", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/cee/my-scores", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
@@ -88,7 +88,7 @@ const CEEPractice = () => {
     const saveScore = async (result) => {
         if (!token) return alert("Please log in to save your score.");
         try {
-            const res = await fetch("http://localhost:5000/api/cee/score", {
+            const res = await fetch("https://exam-practice-1.onrender.com/api/cee/score", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -42,7 +42,7 @@ export default function Dashboard() {
                 }
 
                 const res = await fetch(
-                    "http://localhost:5000/api/games/attempts/me",
+                    "https://exam-practice-1.onrender.com/api/games/attempts/me",
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
@@ -113,8 +113,8 @@ export default function Dashboard() {
                 <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-4">
                     <button
                         className={`w-full sm:w-auto px-4 py-2 rounded transition ${view === "analytics"
-                                ? "bg-green-500 text-white"
-                                : "bg-gray-200 text-gray-700"
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 text-gray-700"
                             }`}
                         onClick={() => setView("analytics")}
                     >
@@ -122,8 +122,8 @@ export default function Dashboard() {
                     </button>
                     <button
                         className={`w-full sm:w-auto px-4 py-2 rounded transition ${view === "details"
-                                ? "bg-green-500 text-white"
-                                : "bg-gray-200 text-gray-700"
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 text-gray-700"
                             }`}
                         onClick={() => setView("details")}
                     >
