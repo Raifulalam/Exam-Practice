@@ -1,3 +1,4 @@
+// src/components/Host/HostSidebar.jsx
 import React, { useContext, useState } from "react";
 import { UserContext } from "../../Auth/UserContext";
 import CreateGameModal from "./CreateGame";
@@ -11,10 +12,12 @@ import {
     BarChart3,
     Users,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function HostSidebar() {
     const { user } = useContext(UserContext);
     const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <div className="w-64 min-h-screen bg-green-800 text-white flex flex-col shadow-lg">
@@ -22,10 +25,9 @@ export default function HostSidebar() {
             <div className="p-6 border-b border-green-600 flex flex-col items-center">
                 <UserCircle className="w-20 h-20 mb-3 text-green-200" />
                 <h2 className="text-lg font-semibold">
-                    {user?.email?.split("@")[0] || "Player"}
+                    {user?.email?.split("@")[0] || "Host"}
                 </h2>
                 <p className="text-sm text-green-300">{user?.email}</p>
-
             </div>
 
             {/* Navigation */}
@@ -33,23 +35,22 @@ export default function HostSidebar() {
                 <SidebarButton
                     icon={<LayoutDashboard />}
                     label="Dashboard"
-                    onClick={() => (window.location.href = `/dashboard/host`)}
+                    onClick={() => navigate("/dashboard/host")}
                 />
-
                 <SidebarButton
                     icon={<BookOpen />}
                     label="CEE Practice"
-                    onClick={() => (window.location.href = "/cee-practice")}
+                    onClick={() => navigate("/cee-practice")}
                 />
                 <SidebarButton
                     icon={<Users />}
                     label="Leaderboard"
-                    onClick={() => (window.location.href = "/players")}
+                    onClick={() => navigate("/players")}
                 />
                 <SidebarButton
                     icon={<BarChart3 />}
                     label="Analytics"
-                    onClick={() => (window.location.href = "/analytics")}
+                    onClick={() => navigate("/analytics")}
                 />
             </nav>
 
@@ -65,7 +66,7 @@ export default function HostSidebar() {
                     label="Logout"
                     onClick={() => {
                         localStorage.removeItem("token");
-                        window.location.href = "/";
+                        navigate("/");
                     }}
                 />
             </div>
