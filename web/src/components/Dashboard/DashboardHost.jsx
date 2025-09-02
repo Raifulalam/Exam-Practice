@@ -40,6 +40,7 @@ export default function DashboardHost() {
         <HostLayout>
             {/* Stats Section */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <h2 className="text-lg font-semibold">Host Dashboard</h2>
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold">Games Created</h2>
