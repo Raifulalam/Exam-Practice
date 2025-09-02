@@ -13,7 +13,6 @@ export default function GamesList() {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                 });
                 const data = await res.json();
-
                 setGames(data);
             } catch (err) {
                 console.error(err);
@@ -21,7 +20,7 @@ export default function GamesList() {
         };
         fetchGames();
     }, []);
-    console.log(games)
+
     const handleJoin = (game) => {
         const enteredCode = window.prompt(
             `Enter the game code for "${game.title}" to join:`
@@ -61,7 +60,7 @@ export default function GamesList() {
                                         <td className="p-2 border">{idx + 1}</td>
                                         <td className="p-2 border">{game.title}</td>
                                         <td className="p-2 border">{game.host?.name || "N/A"}</td>
-                                        <td className="p-2 border">{game.createdAt || "-"}</td>
+                                        <td className="p-2 border">{game.description || "-"}</td>
                                         <td className="p-2 border">{game.questions?.length || 0}</td>
                                         <td className="p-2 border">
                                             <button

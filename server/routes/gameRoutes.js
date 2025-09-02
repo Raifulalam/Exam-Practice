@@ -8,7 +8,7 @@ const router = express.Router();
 // ✅ Create a game (host only)
 router.post("/create", auth(["host"]), async (req, res) => {
     try {
-        const { title, gameType, questions, gameCode } = req.body;
+        const { title, gameType, questions, gameCode, description } = req.body;
 
         if (!title || !gameType) {
             return res.status(400).json({ msg: "Title and type are required" });
@@ -19,7 +19,8 @@ router.post("/create", auth(["host"]), async (req, res) => {
             gameType,
             questions: questions || [],
             host: req.user.id, // from token
-            gameCode
+            gameCode,
+            description
         });
 
         await newGame.save();
@@ -164,7 +165,7 @@ router.get("/all", auth(["player", "host"]), async (req, res) => {
     try {
         const games = await Game.find()
             .populate("host", "name email") // show host details
-            .select("title gameType gameCode host createdAt questions");
+            .select("title gameType descriptions gameCode host createdAt questions");
 
         res.json(games);
     } catch (error) {
