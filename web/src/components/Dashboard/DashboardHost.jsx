@@ -6,7 +6,10 @@ export default function DashboardHost() {
     const [stats, setStats] = useState(null);
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    console.log(games.id)
+    function getTimestampFromObjectId(id) {
+        return new Date(parseInt(id.substring(0, 8), 16) * 1000);
+    }
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -40,7 +43,7 @@ export default function DashboardHost() {
         <HostLayout>
             {/* Stats Section */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <h2 className="text-lg font-semibold">Host Dashboard</h2>
+
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold">Games Created</h2>
@@ -104,11 +107,14 @@ export default function DashboardHost() {
                                         <td className="p-3 border">{game.totalQuestions}</td>
                                         <td className="p-3 border">{game.totalAttempts}</td>
                                         <td className="p-3 border text-gray-600">
-                                            {game.createdAt
-                                                ? new Date(game.createdAt).toLocaleString()
+                                            {games?._id
+                                                ? getTimestampFromObjectId(String(games._id)).toLocaleString()
                                                 : "N/A"}
                                         </td>
+
+
                                     </tr>
+
                                 ))}
                             </tbody>
                         </table>

@@ -164,7 +164,7 @@ router.get("/all", auth(["player", "host"]), async (req, res) => {
     try {
         const games = await Game.find()
             .populate("host", "name email") // show host details
-            .select("title gameType gameCode host createdAt");
+            .select("title gameType gameCode host createdAt questions");
 
         res.json(games);
     } catch (error) {

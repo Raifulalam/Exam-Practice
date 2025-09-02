@@ -65,7 +65,7 @@ export default function HostSidebar() {
                     label="Logout"
                     onClick={() => {
                         localStorage.removeItem("token");
-                        window.location.href = "/login";
+                        window.location.href = "/";
                     }}
                 />
             </div>
