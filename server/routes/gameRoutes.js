@@ -5,111 +5,61 @@ const GameResponse = require("../models/GameResponse");
 
 const router = express.Router();
 
-// ✅ Create a game (host only)
+/* -------------------- HOST ROUTES -------------------- */
+
+// ✅ Create a new game (host only)
 router.post("/create", auth(["host"]), async (req, res) => {
     try {
-        const { title, gameType, questions, gameCode, description } = req.body;
-
-        if (!title || !gameType) {
-            return res.status(400).json({ msg: "Title and type are required" });
-        }
+        const { title, gameType, questions, gameCode, description, duration, passMarks, shuffleQuestions } = req.body;
+        if (!title || !gameType || !gameCode) return res.status(400).json({ msg: "Title, type, and gameCode are required" });
 
         const newGame = new Game({
+            host: req.user.id,
             title,
             gameType,
             questions: questions || [],
-            host: req.user.id, // from token
             gameCode,
-            description
+            description,
+            duration: duration || 0,
+            passMarks: passMarks || 0,
+            shuffleQuestions: shuffleQuestions ?? true
         });
 
+        // auto calculate total marks
+        newGame.totalMarks = newGame.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
         await newGame.save();
 
-        return res.status(201).json({ msg: "Game created", game: newGame });
+        res.status(201).json({ msg: "Game created", game: newGame });
     } catch (err) {
         console.error("Error creating game:", err.message);
-        return res.status(500).json({ msg: "Server error" });
+        res.status(500).json({ msg: "Server error" });
     }
 });
 
-// ✅ Get all games
-// ✅ Get games created by the logged-in host
+// ✅ Get all games created by host
 router.get("/mine", auth(["host"]), async (req, res) => {
     try {
-        const games = await Game.find({ host: req.user.id })
-            .sort({ createdAt: -1 }); // latest first
+        const games = await Game.find({ host: req.user.id }).sort({ createdAt: -1 });
         res.json(games);
-    } catch (error) {
-        console.error("Error fetching host games:", error);
+    } catch (err) {
+        console.error("Error fetching host games:", err);
         res.status(500).json({ error: "Failed to fetch host games" });
     }
 });
 
-
-// ✅ Player attempts game
-router.post("/:gameId/attempt", auth(["host"]), async (req, res) => {
-    try {
-        const { responses } = req.body; // [{questionId, answer}, ...]
-
-        const game = await Game.findById(req.params.gameId);
-        if (!game) return res.status(404).json({ error: "Game not found" });
-
-        let score = 0;
-
-        const evaluatedResponses = responses.map((r) => {
-            const q = game.questions.find(q => String(q._id) === String(r.questionId));
-
-            const correct = game.gameType === "quiz" && q ? q.answer === r.answer : null;
-            if (correct) score++;
-
-            return { questionId: r.questionId, answer: r.answer, correct };
-        });
-
-        const attempt = await GameResponse.create({
-            game: game._id,
-            player: req.user.id,
-            responses: evaluatedResponses,
-            score
-        });
-
-        res.status(201).json({ msg: "Attempt saved", attempt });
-    } catch (error) {
-        console.error("Error saving attempt:", error);
-        res.status(500).json({ error: "Failed to save attempt" });
-    }
-});
-
-
-// ✅ Get attempts of a player
-router.get("/attempts/me", auth(["player"]), async (req, res) => {
-    try {
-        const attempts = await GameResponse.find({ player: req.user.id })
-            .populate("game", "title gameType questions") // populate game title and questions
-            .lean();
-
-        res.json({ attempts });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch attempts" });
-    }
-});
-
-// ✅ Get all attempts for host's games with player details
+// ✅ Get all attempts for host's games
 router.get("/host/attempts", auth(["host"]), async (req, res) => {
     try {
-        // Find all games created by this host
         const myGames = await Game.find({ host: req.user.id });
         const gameIds = myGames.map(g => g._id);
 
-        // Fetch attempts for those games
         const attempts = await GameResponse.find({ game: { $in: gameIds } })
-            .populate("player", "name email")   // who attempted
-            .populate("game", "title gameCode questions truths dares"); // which game
+            .populate("player", "name email")
+            .populate("game", "title gameCode questions");
 
-        // format response with score & percentage
         const formatted = attempts.map(a => {
-            const totalQuestions = a.game.questions?.length || a.game.truths?.length || a.game.dares?.length || 0;
-            const percentage = totalQuestions > 0 ? Math.round((a.score / totalQuestions) * 100) : null;
+            const totalQuestions = a.game.questions?.length || 0;
+            const percentage = totalQuestions ? Math.round((a.score / totalQuestions) * 100) : null;
 
             return {
                 attemptId: a._id,
@@ -125,133 +75,100 @@ router.get("/host/attempts", auth(["host"]), async (req, res) => {
         });
 
         res.json(formatted);
-    } catch (error) {
-        console.error("Error fetching host attempts:", error);
+    } catch (err) {
+        console.error("Error fetching host attempts:", err);
         res.status(500).json({ error: "Failed to fetch host attempts" });
     }
 });
-// GET attempts for a specific game by host
-router.get("/host/attempts/:gameCode", auth(["host"]), async (req, res) => {
-    try {
-        const game = await Game.findOne({ host: req.user.id, gameCode: req.params.gameCode });
-        if (!game) return res.status(404).json({ error: "Game not found" });
 
-        const attempts = await GameResponse.find({ game: game._id })
-            .populate("player", "name email");
-
-        const formatted = attempts.map(a => {
-            const totalQuestions = game.questions?.length || game.truths?.length || game.dares?.length || 0;
-            const percentage = totalQuestions > 0 ? Math.round((a.score / totalQuestions) * 100) : null;
-
-            return {
-                attemptId: a._id,
-                playerName: a.player.name,
-                playerEmail: a.player.email,
-                score: a.score,
-                percentage,
-                attemptedAt: a.createdAt
-            };
-        });
-
-        res.json(formatted);
-    } catch (error) {
-        console.error("Error fetching attempts for game:", error);
-        res.status(500).json({ error: "Failed to fetch attempts" });
-    }
-});
-
-// ✅ Get all games (for players to browse)
-router.get("/all", auth(["player", "host"]), async (req, res) => {
-    try {
-        const games = await Game.find()
-            .populate("host", "name email") // show host details
-            .select("title gameType descriptions gameCode host createdAt questions");
-
-        res.json(games);
-    } catch (error) {
-        console.error("Error fetching games:", error);
-        res.status(500).json({ error: "Failed to fetch games" });
-    }
-});
-
-
-// ✅ Get host dashboard stats
-// ✅ Get host dashboard stats
+// ✅ Get dashboard stats for host
+// ✅ Get dashboard stats for host
 router.get("/host/stats", auth(["host"]), async (req, res) => {
     try {
         const myGames = await Game.find({ host: req.user.id });
-        const gameCount = myGames.length;
+        const gameIds = myGames.map((g) => g._id);
 
-        // fetch all attempts for the host's games
-        const attempts = await GameResponse.find({ game: { $in: myGames.map(g => g._id) } })
+        const attempts = await GameResponse.find({ game: { $in: gameIds } })
             .populate("player", "name email")
             .populate("game", "title gameCode");
 
-        // summary per game
-        const gameStats = myGames.map(game => {
-            const gameAttempts = attempts.filter(a => String(a.game._id) === String(game._id));
+        // 📊 Per-game breakdown
+        const gameStats = myGames.map((game) => {
+            const gameAttempts = attempts.filter(
+                (a) => String(a.game._id) === String(game._id)
+            );
             return {
                 gameId: game._id,
                 title: game.title,
                 gameCode: game.gameCode,
-                totalQuestions: game.questions.length || game.truths?.length || game.dares?.length || 0,
+                totalQuestions: game.questions.length,
                 totalAttempts: gameAttempts.length,
+                uniqueParticipants: new Set(
+                    gameAttempts.map((a) => a.player?._id?.toString())
+                ).size,
             };
         });
 
-        // Calculate top scorer
-        let topScorer = null;
-        if (attempts.length > 0) {
-            const sortedByScore = [...attempts].sort((a, b) => b.score - a.score);
-            topScorer = {
-                playerId: sortedByScore[0].player._id,
-                name: sortedByScore[0].player.name,
-                email: sortedByScore[0].player.email,
-                score: sortedByScore[0].score
-            };
-        }
+        // 🏆 Top scorer across all games
+        const topScorer = attempts.length
+            ? attempts.reduce((prev, curr) =>
+                curr.score > (prev?.score || 0) ? curr : prev
+            )
+            : null;
 
-        // Calculate top participant (most attempts)
-        let topParticipant = null;
-        if (attempts.length > 0) {
-            const attemptsCountMap = {};
-            attempts.forEach(a => {
-                const id = a.player._id.toString();
-                if (!attemptsCountMap[id]) attemptsCountMap[id] = { ...a.player._doc, attempts: 0 };
-                attemptsCountMap[id].attempts++;
-            });
-            const participantsArray = Object.values(attemptsCountMap);
-            participantsArray.sort((a, b) => b.attempts - a.attempts);
-            topParticipant = participantsArray[0];
-        }
+        // 👥 Count unique participants across all host’s games
+        const uniqueParticipants = new Set(
+            attempts.map((a) => a.player?._id?.toString())
+        );
 
-        return res.json({
-            gameCount,
+        // 🎯 Top participant (most attempts overall)
+        const attemptsCountMap = {};
+        attempts.forEach((a) => {
+            const id = a.player._id.toString();
+            if (!attemptsCountMap[id]) {
+                attemptsCountMap[id] = { ...a.player._doc, attempts: 0 };
+            }
+            attemptsCountMap[id].attempts++;
+        });
+        const topParticipant =
+            Object.values(attemptsCountMap).sort((a, b) => b.attempts - a.attempts)[0] ||
+            null;
+
+        res.json({
+            gameCount: myGames.length,
             totalAttempts: attempts.length,
+            totalParticipants: uniqueParticipants.size, // ✅ NEW
             gameStats,
             topScorer,
-            topParticipant
+            topParticipant,
         });
-
-    } catch (error) {
-        console.error("Error fetching host stats:", error);
+    } catch (err) {
+        console.error("Error fetching host stats:", err);
         res.status(500).json({ error: "Failed to fetch host stats" });
     }
 });
 
 
+/* -------------------- PLAYER ROUTES -------------------- */
 
-// GET /api/games/join/:code
-router.get("/join/:code", async (req, res) => {
-    const code = req.params.code;
-    console.log("Join request received for code:", code);
-
+// ✅ Browse all published games
+router.get("/all", auth(["player", "host"]), async (req, res) => {
     try {
-        const game = await Game.findOne({ gameCode: code });
-        console.log("Game found:", game);
+        const games = await Game.find({ isPublished: true })
+            .populate("host", "name email")
+            .select("title gameType description gameCode host createdAt questions");
+        res.json(games);
+    } catch (err) {
+        console.error("Error fetching games:", err);
+        res.status(500).json({ error: "Failed to fetch games" });
+    }
+});
 
+// ✅ Join a game by code
+router.get("/join/:code", auth(["player"]), async (req, res) => {
+    try {
+        const game = await Game.findOne({ gameCode: req.params.code, isPublished: true });
         if (!game) return res.status(404).json({ error: "Game not found" });
-
         res.json(game);
     } catch (err) {
         console.error("Error joining game:", err);
@@ -259,49 +176,46 @@ router.get("/join/:code", async (req, res) => {
     }
 });
 
-// POST /api/games/attempt/code/:gameCode
-router.post("/attempt/code/:gameCode", auth(["player"]), async (req, res) => {
+// ✅ Submit attempt (by game ID)
+router.post("/:gameId/attempt", auth(["player"]), async (req, res) => {
     try {
-        const { responses } = req.body; // [{questionId, answer}, ...]
-        const game = await Game.findOne({ gameCode: req.params.gameCode });
+        const { responses } = req.body;
+        const game = await Game.findById(req.params.gameId);
         if (!game) return res.status(404).json({ error: "Game not found" });
 
-        // Evaluate responses (only for quiz)
-        let score = 0;
         const evaluatedResponses = responses.map(r => {
             const q = game.questions.find(q => String(q._id) === String(r.questionId));
-            const correct = game.gameType === "quiz" && q ? q.answer === r.answer : null;
-            if (correct) score++;
-            return { questionId: r.questionId, answer: r.answer, correct };
+            let correct = null;
+            if (game.gameType === "quiz" || game.gameType === "exam") correct = q && q.answer === r.answer;
+            const marksObtained = correct ? q.marks : 0;
+            return { questionId: r.questionId, answer: r.answer, correct, marksObtained };
         });
 
-        // Save attempt
+        const score = evaluatedResponses.reduce((sum, r) => sum + (r.marksObtained || 0), 0);
+
         const attempt = await GameResponse.create({
             game: game._id,
-            player: req.user.id, // use decoded user id from token
+            player: req.user.id,
             responses: evaluatedResponses,
             score
         });
-        res.status(201).json({
-            msg: "Attempt saved",
-            attempt,
-            evaluatedResponses // include this for frontend feedback
-        });
-    } catch (error) {
-        console.error("Error saving attempt:", error);
+
+        res.status(201).json({ msg: "Attempt saved", attempt, evaluatedResponses });
+    } catch (err) {
+        console.error("Error saving attempt:", err);
         res.status(500).json({ error: "Failed to save attempt" });
     }
 });
-router.get("/attempts", async (req, res) => {
-    try {
-        // populate player details instead of just player ID
-        const attempts = await GameResponse.find()
-            .populate("player", "name email") // fetch player info
-            .populate("game", "title"); // optional: fetch game title
 
-        res.json(attempts);
+// ✅ Get attempts of logged-in player
+router.get("/attempts/me", auth(["player"]), async (req, res) => {
+    try {
+        const attempts = await GameResponse.find({ player: req.user.id })
+            .populate("game", "title gameType questions")
+            .lean();
+        res.json({ attempts });
     } catch (err) {
-        console.error("Error fetching attempts:", err);
+        console.error(err);
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });

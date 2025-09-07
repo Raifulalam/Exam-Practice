@@ -1,7 +1,15 @@
 // src/components/Host/Analytics.jsx
 import React, { useEffect, useState } from "react";
 import HostLayout from "./HostLayout";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+} from "recharts";
 
 export default function Analytics() {
     const [stats, setStats] = useState(null);
@@ -10,11 +18,14 @@ export default function Analytics() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch("https://exam-practice-1.onrender.com/api/games/host/stats", {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                });
+                const res = await fetch(
+                    "https://exam-practice-1.onrender.com/api/games/host/stats",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                    }
+                );
                 const data = await res.json();
                 setStats(data);
             } catch (err) {
@@ -41,19 +52,49 @@ export default function Analytics() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <div className="bg-white rounded-xl shadow p-4 text-center">
                                 <p className="text-gray-500">Total Games</p>
-                                <h3 className="text-3xl font-bold text-indigo-600">{stats.gameCount}</h3>
+                                <h3 className="text-3xl font-bold text-indigo-600">
+                                    {stats.gameCount}
+                                </h3>
                             </div>
 
                             <div className="bg-white rounded-xl shadow p-4 text-center">
                                 <p className="text-gray-500">Total Attempts</p>
-                                <h3 className="text-3xl font-bold text-green-600">{stats.totalAttempts}</h3>
+                                <h3 className="text-3xl font-bold text-green-600">
+                                    {stats.totalAttempts}
+                                </h3>
                             </div>
+
+                            <div className="bg-white rounded-xl shadow p-4 text-center">
+                                <p className="text-gray-500">Total Participants</p>
+                                <h3 className="text-3xl font-bold text-pink-600">
+                                    {stats.totalParticipants}
+                                </h3>
+                            </div>
+
                             <div className="bg-white rounded-xl shadow p-4 text-center">
                                 <p className="text-gray-500">Avg Attempts/Game</p>
                                 <h3 className="text-3xl font-bold text-blue-600">
                                     {stats.gameCount > 0
                                         ? (stats.totalAttempts / stats.gameCount).toFixed(1)
                                         : 0}
+                                </h3>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow p-4 text-center">
+                                <p className="text-gray-500">Top Scorer</p>
+                                <h3 className="text-lg font-semibold text-purple-600">
+                                    {stats.topScorer
+                                        ? `${stats.topScorer.player?.name || "Unknown"} (${stats.topScorer.score})`
+                                        : "N/A"}
+                                </h3>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow p-4 text-center">
+                                <p className="text-gray-500">Top Participant</p>
+                                <h3 className="text-lg font-semibold text-orange-600">
+                                    {stats.topParticipant
+                                        ? `${stats.topParticipant.name || "Unknown"} (${stats.topParticipant.attempts} attempts)`
+                                        : "N/A"}
                                 </h3>
                             </div>
                         </div>
@@ -82,15 +123,19 @@ export default function Analytics() {
                                         <th className="px-4 py-2 border">Game Code</th>
                                         <th className="px-4 py-2 border">Questions</th>
                                         <th className="px-4 py-2 border">Attempts</th>
+                                        <th className="px-4 py-2 border">Unique Participants</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {stats.gameStats.map((g) => (
+                                    {(stats.gameStats || []).map((g) => (
                                         <tr key={g.gameId} className="hover:bg-gray-50">
                                             <td className="px-4 py-2 border">{g.title}</td>
                                             <td className="px-4 py-2 border">{g.gameCode}</td>
                                             <td className="px-4 py-2 border">{g.totalQuestions}</td>
                                             <td className="px-4 py-2 border">{g.totalAttempts}</td>
+                                            <td className="px-4 py-2 border">
+                                                {g.uniqueParticipants}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
