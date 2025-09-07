@@ -13,7 +13,7 @@ exports.sendVerificationEmail = async (user, token) => {
         const url = `http://localhost:5000/api/auth/verify-email?token=${token}`;
 
         await transporter.sendMail({
-            from: `"My App" <${process.env.EMAIL_USER}>`,
+            from: `"ExamPrepHub" <${process.env.EMAIL_USER}>`,
             to: user.email,
             subject: "Verify your email",
             html: `
