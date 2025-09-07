@@ -1,15 +1,7 @@
-const nodemailer = require("nodemailer");
+const transporter = require("../config/nodeMailer");
 
 exports.sendVerificationEmail = async (user, token) => {
     try {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS, // Gmail App Password
-            },
-        });
-
         const url = `http://localhost:5000/api/auth/verify-email?token=${token}`;
 
         await transporter.sendMail({
