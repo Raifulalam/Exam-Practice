@@ -10,6 +10,7 @@ export default function DashboardHost() {
     function getTimestampFromObjectId(id) {
         return new Date(parseInt(id.substring(0, 8), 16) * 1000);
     }
+    const mt = localStorage.getItem('token');
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -41,6 +42,9 @@ export default function DashboardHost() {
 
     return (
         <HostLayout>
+
+            <p>{mt}</p>
+
             {/* Stats Section */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 

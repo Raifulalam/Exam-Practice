@@ -28,14 +28,17 @@ export default function Login() {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("role", data.role);
 
-
-                // Small delay for UX
                 setTimeout(() => {
                     if (data.role === "host") navigate("/dashboard/host");
                     else navigate("/dashboard/player");
                 }, 800);
             } else {
-                setError(data.msg || "Invalid credentials");
+                // 👇 Show a special error if email not verified
+                if (res.status === 403) {
+                    setError("Please verify your email before logging in.");
+                } else {
+                    setError(data.msg || "Invalid credentials");
+                }
             }
         } catch (err) {
             console.error(err);
@@ -44,6 +47,7 @@ export default function Login() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">

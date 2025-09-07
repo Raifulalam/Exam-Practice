@@ -4,8 +4,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
-
+const { sendVerificationEmail } = require("../utils/emailService");
 const router = express.Router();
+
+// Register
+
 
 // Register
 router.post("/register", async (req, res) => {
@@ -16,16 +19,41 @@ router.post("/register", async (req, res) => {
         if (existingUser) return res.status(400).json({ msg: "User already exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashedPassword, role });
+        const newUser = new User({ name, email, password: hashedPassword, role, verified: false });
         await newUser.save();
 
-        res.json({ msg: "User registered successfully" });
+        // create verification token
+        const token = jwt.sign(
+            { id: newUser._id, email: newUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // send verification email
+        await sendVerificationEmail(newUser, token);
+
+        res.json({ msg: "✅ Registered! Please check your email to verify." });
     } catch (err) {
         console.error("Register error:", err);
         res.status(500).json({ msg: err.message });
     }
 });
+//verify 
+router.get("/verify-email", async (req, res) => {
+    try {
+        const { token } = req.query;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        await User.findByIdAndUpdate(decoded.id, { verified: true });
+
+        res.send("✅ Email verified successfully! You can now login.");
+    } catch (err) {
+        console.error("Email verify error:", err);
+        res.status(400).send("❌ Invalid or expired link");
+    }
+});
+
+// Login
 // Login
 router.post("/login", async (req, res) => {
     try {
@@ -40,6 +68,10 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({ msg: `You are not registered as ${role}` });
         }
 
+        if (!user.verified) {
+            return res.status(403).json({ msg: "Please verify your email before login" });
+        }
+
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET,
@@ -52,6 +84,7 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ msg: err.message });
     }
 });
+
 
 // Get logged-in user
 router.get("/me", authMiddleware(), async (req, res) => {

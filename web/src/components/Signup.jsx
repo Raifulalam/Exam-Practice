@@ -31,7 +31,8 @@ export default function Register() {
                 return;
             }
 
-            alert("Registration successful! Please login.");
+            // ✅ Instead of redirecting, ask user to check email
+            alert("Registration successful! Please check your email to verify your account before logging in.");
             navigate("/login");
         } catch (err) {
             console.error("Frontend error:", err);
@@ -40,6 +41,7 @@ export default function Register() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-green-400 via-blue-500 to-purple-600">
