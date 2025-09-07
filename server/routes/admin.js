@@ -8,7 +8,7 @@ router.post("/send-bulk-email", async (req, res) => {
         const { subject, message } = req.body;
 
         // Fetch only verified users
-        const users = await User.find({ isVerified: true }).select("email name");
+        const users = await User.find({ verified: true }).select("email name");
 
         if (!users.length) {
             return res.status(404).json({ msg: "No verified users found" });
