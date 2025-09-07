@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import HostLayout from "./HostLayout";
+import PlayerLayout from "./PlayerLayout";
 import { Crown, User, Mail, Star } from "lucide-react";
 
 export default function PlayerLeaderboard() {
@@ -45,7 +45,7 @@ export default function PlayerLeaderboard() {
     const topThree = leaderboard.slice(0, 3);
 
     return (
-        <HostLayout>
+        <PlayerLayout>
             <div className="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-6xl mx-auto">
                 <h2 className="text-3xl font-extrabold mb-8 text-center text-indigo-700 flex items-center justify-center gap-2">
                     <Crown className="w-8 h-8 text-yellow-500" />
@@ -134,6 +134,6 @@ export default function PlayerLeaderboard() {
                     </div>
                 )}
             </div>
-        </HostLayout>
+        </PlayerLayout>
     );
 }

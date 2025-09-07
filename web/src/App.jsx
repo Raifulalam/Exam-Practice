@@ -16,6 +16,7 @@ import GamesList from "./components/PlayerDashboard/GamesList";
 import AttemptGame from "./components/PlayerDashboard/Attemptgames";
 import MyAttempts from "./components/PlayerDashboard/MyScore";
 import CreatePracticeSetModal from "./components/PlayerDashboard/CreatePracticeSetModel";
+import PlayerLeaderboard from "./components/PlayerDashboard/Leaderboard";
 
 function App() {
   return (
@@ -35,12 +36,14 @@ function App() {
           <Route path="/demo" element={<PracticeDemo />} />
           <Route path="/cee-practice" element={<QuizApp />} />
           <Route path="/players" element={<Players />} />
+          <Route path="/players/leaderboard" element={<PlayerLeaderboard />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="*" element={<Navigate to="/" />} />
           <Route path="/gamelist" element={<GamesList />} />
           <Route path="/attempt/:gameCode" element={<AttemptGame />} />
           <Route path="/myattempt" element={<MyAttempts />} />
           <Route path="/create-practice" element={<CreatePracticeSetModal />} />
+
         </Routes>
       </Router>
     </UserProvider>

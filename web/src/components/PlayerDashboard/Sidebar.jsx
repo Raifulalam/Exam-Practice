@@ -88,6 +88,14 @@ export default function PlayerSidebar({ onLogout }) {
                             setIsOpen(false);
                         }}
                     />
+                    <SidebarButton
+                        icon={<History />}
+                        label="Leaderboard"
+                        onClick={() => {
+                            navigate("/players/leaderboard");
+                            setIsOpen(false);
+                        }}
+                    />
                 </nav>
 
                 {/* Actions */}
