@@ -181,14 +181,17 @@ router.get("/host/stats", auth(["host"]), async (req, res) => {
     try {
         console.log("Host stats requested by:", req.user);
 
+        // 1️⃣ Fetch all games created by this host
         const myGames = await Game.find({ host: req.user.id });
         const gameCount = myGames.length;
+        const gameIds = myGames.map(g => g._id);
 
-        const attempts = await GameResponse.find({ game: { $in: myGames.map(g => g._id) } })
+        // 2️⃣ Fetch all attempts for these games
+        const attempts = await GameResponse.find({ game: { $in: gameIds } })
             .populate("player", "name email")
-            .populate("game", "title gameCode");
+            .populate("game", "title gameCode questions truths dares");
 
-        // summary per game
+        // 3️⃣ Summary per game
         const gameStats = myGames.map(game => {
             const gameAttempts = attempts.filter(a => a.game && String(a.game._id) === String(game._id));
             return {
@@ -204,52 +207,51 @@ router.get("/host/stats", auth(["host"]), async (req, res) => {
             };
         });
 
-        // top scorer
-        let topScorer = null;
-        if (attempts.length > 0) {
-            const validAttempts = attempts.filter(a => a.player && typeof a.score === "number");
-            if (validAttempts.length > 0) {
-                const sortedByScore = [...validAttempts].sort((a, b) => b.score - a.score);
-                const best = sortedByScore[0];
-                topScorer = {
-                    playerId: best.player._id,
-                    name: best.player.name,
-                    email: best.player.email,
-                    score: best.score,
+        // 4️⃣ Compute cumulative scores per player (leaderboard)
+        const leaderboardMap = {};
+        attempts.forEach(a => {
+            if (!a.player) return; // skip if player is missing
+            const playerId = a.player._id.toString();
+            if (!leaderboardMap[playerId]) {
+                leaderboardMap[playerId] = {
+                    playerId,
+                    name: a.player.name,
+                    email: a.player.email,
+                    totalScore: 0,
+                    totalAttempts: 0,
                 };
             }
-        }
+            leaderboardMap[playerId].totalScore += a.score || 0;
+            leaderboardMap[playerId].totalAttempts += 1;
+        });
 
-        // top participant
-        let topParticipant = null;
-        if (attempts.length > 0) {
-            const attemptsCountMap = {};
-            attempts.forEach(a => {
-                if (a.player) {
-                    const id = a.player._id.toString();
-                    if (!attemptsCountMap[id]) {
-                        attemptsCountMap[id] = { ...a.player.toObject?.() || {}, attempts: 0 };
-                    }
-                    attemptsCountMap[id].attempts++;
-                }
-            });
-            const participantsArray = Object.values(attemptsCountMap);
-            participantsArray.sort((a, b) => b.attempts - a.attempts);
-            topParticipant = participantsArray[0] || null;
-        }
+        const leaderboard = Object.values(leaderboardMap).sort(
+            (a, b) => b.totalScore - a.totalScore
+        );
 
+        // 5️⃣ Determine top scorer and top participant
+        const topScorer = leaderboard[0] || null;
+
+        const topParticipant = leaderboard.reduce((max, player) => {
+            return player.totalAttempts > (max?.totalAttempts || 0) ? player : max;
+        }, null);
+
+        // 6️⃣ Return stats
         return res.json({
             gameCount,
             totalAttempts: attempts.length,
             gameStats,
             topScorer,
             topParticipant,
+            leaderboard // optional: include full leaderboard
         });
+
     } catch (error) {
         console.error("Error fetching host stats:", error);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 
@@ -318,5 +320,69 @@ router.get("/attempts", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });
+router.get("/leaderboard/full", async (req, res) => {
+    try {
+        // 1️⃣ Aggregate scores per player per game
+        const playerGameScores = await GameResponse.aggregate([
+            {
+                $group: {
+                    _id: { player: "$player", game: "$game" },
+                    totalScorePerGame: { $sum: "$score" },
+                    attemptsPerGame: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { "totalScorePerGame": -1 }
+            }
+        ]);
+
+        // 2️⃣ Populate player and game details
+        await GameResponse.populate(playerGameScores, [
+            { path: "_id.player", select: "name email" },
+            { path: "_id.game", select: "title gameCode" }
+        ]);
+
+        // 3️⃣ Merge scores per player to get total score
+        const leaderboardMap = {};
+
+        playerGameScores.forEach(entry => {
+            const playerId = entry._id.player._id.toString();
+
+            if (!leaderboardMap[playerId]) {
+                leaderboardMap[playerId] = {
+                    playerId,
+                    name: entry._id.player.name,
+                    email: entry._id.player.email,
+                    totalScore: 0,
+                    totalAttempts: 0,
+                    games: []
+                };
+            }
+
+            leaderboardMap[playerId].totalScore += entry.totalScorePerGame;
+            leaderboardMap[playerId].totalAttempts += entry.attemptsPerGame;
+
+            leaderboardMap[playerId].games.push({
+                gameId: entry._id.game._id,
+                title: entry._id.game.title,
+                gameCode: entry._id.game.gameCode,
+                score: entry.totalScorePerGame,
+                attempts: entry.attemptsPerGame
+            });
+        });
+
+        // 4️⃣ Convert map to array and sort by totalScore descending
+        const leaderboard = Object.values(leaderboardMap).sort(
+            (a, b) => b.totalScore - a.totalScore
+        );
+
+        res.json(leaderboard);
+
+    } catch (err) {
+        console.error("Error fetching full leaderboard:", err);
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+});
+
 
 module.exports = router;

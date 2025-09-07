@@ -84,7 +84,7 @@ export default function Analytics() {
                                 <Trophy className="w-8 h-8 mb-2" />
                                 <p className="opacity-80">Top Scorer</p>
                                 <h3 className="text-lg font-semibold">
-                                    {stats.topScorer?.player?.name || "N/A"}
+                                    {stats.topScorer?.name || "N/A"}
                                 </h3>
                             </div>
                         </div>

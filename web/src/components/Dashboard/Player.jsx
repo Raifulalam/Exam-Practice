@@ -10,7 +10,7 @@ export default function PlayerLeaderboard() {
     useEffect(() => {
         const fetchAttempts = async () => {
             try {
-                const res = await fetch("https://exam-practice-1.onrender.com/api/games/attempts", {
+                const res = await fetch("https://exam-practice-1.onrender.com/api/games/leaderboard/full", {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
                 });
                 if (!res.ok) throw new Error("Failed to fetch attempts");
@@ -86,7 +86,7 @@ export default function PlayerLeaderboard() {
                                     <th className="px-4 py-3 ">Player</th>
                                     <th className="px-4 py-3">Email</th>
                                     <th className="px-4 py-3">Score</th>
-                                    <th className="px-4 py-3">Responses</th>
+                                    <th className="px-4 py-3">Questions</th>
                                     <th className="px-4 py-3">Date</th>
                                 </tr>
                             </thead>
