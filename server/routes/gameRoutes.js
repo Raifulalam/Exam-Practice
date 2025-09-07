@@ -322,8 +322,8 @@ router.get("/attempts", async (req, res) => {
 });
 router.get("/leaderboard/full", async (req, res) => {
     try {
-        // 1️⃣ Aggregate scores per player per game
         const playerGameScores = await GameResponse.aggregate([
+            // group by player + game
             {
                 $group: {
                     _id: { player: "$player", game: "$game" },
@@ -331,47 +331,55 @@ router.get("/leaderboard/full", async (req, res) => {
                     attemptsPerGame: { $sum: 1 }
                 }
             },
+            // lookup player info
             {
-                $sort: { "totalScorePerGame": -1 }
-            }
+                $lookup: {
+                    from: "users",           // your User collection name
+                    localField: "_id.player",
+                    foreignField: "_id",
+                    as: "player"
+                }
+            },
+            { $unwind: "$player" },      // flatten the array
+            // lookup game info
+            {
+                $lookup: {
+                    from: "games",           // your Game collection name
+                    localField: "_id.game",
+                    foreignField: "_id",
+                    as: "game"
+                }
+            },
+            { $unwind: "$game" },        // flatten the array
+            { $sort: { totalScorePerGame: -1 } } // sort descending
         ]);
 
-        // 2️⃣ Populate player and game details
-        await GameResponse.populate(playerGameScores, [
-            { path: "_id.player", select: "name email" },
-            { path: "_id.game", select: "title gameCode" }
-        ]);
-
-        // 3️⃣ Merge scores per player to get total score
+        // merge scores per player
         const leaderboardMap = {};
-
         playerGameScores.forEach(entry => {
-            const playerId = entry._id.player._id.toString();
-
+            const playerId = entry.player._id.toString();
             if (!leaderboardMap[playerId]) {
                 leaderboardMap[playerId] = {
                     playerId,
-                    name: entry._id.player.name,
-                    email: entry._id.player.email,
+                    name: entry.player.name,
+                    email: entry.player.email,
                     totalScore: 0,
                     totalAttempts: 0,
                     games: []
                 };
             }
-
             leaderboardMap[playerId].totalScore += entry.totalScorePerGame;
             leaderboardMap[playerId].totalAttempts += entry.attemptsPerGame;
 
             leaderboardMap[playerId].games.push({
-                gameId: entry._id.game._id,
-                title: entry._id.game.title,
-                gameCode: entry._id.game.gameCode,
+                gameId: entry.game._id,
+                title: entry.game.title,
+                gameCode: entry.game.gameCode,
                 score: entry.totalScorePerGame,
                 attempts: entry.attemptsPerGame
             });
         });
 
-        // 4️⃣ Convert map to array and sort by totalScore descending
         const leaderboard = Object.values(leaderboardMap).sort(
             (a, b) => b.totalScore - a.totalScore
         );
@@ -380,9 +388,10 @@ router.get("/leaderboard/full", async (req, res) => {
 
     } catch (err) {
         console.error("Error fetching full leaderboard:", err);
-        res.status(500).json({ error: "Failed to fetch leaderboard" });
+        res.status(500).json({ error: err.message });
     }
 });
+
 
 
 module.exports = router;
