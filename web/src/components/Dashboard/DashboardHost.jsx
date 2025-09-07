@@ -6,21 +6,22 @@ export default function DashboardHost() {
     const [stats, setStats] = useState(null);
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
-    console.log(games.id)
+    const mt = localStorage.getItem("token");
+
     function getTimestampFromObjectId(id) {
         return new Date(parseInt(id.substring(0, 8), 16) * 1000);
     }
-    const mt = localStorage.getItem('token');
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [statsRes, gamesRes] = await Promise.all([
                     fetch("https://exam-practice-1.onrender.com/api/games/host/stats", {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                        headers: { Authorization: `Bearer ${mt}` },
                     }),
                     fetch("https://exam-practice-1.onrender.com/api/games/mine", {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                    })
+                        headers: { Authorization: `Bearer ${mt}` },
+                    }),
                 ]);
 
                 const statsData = await statsRes.json();
@@ -36,18 +37,16 @@ export default function DashboardHost() {
         };
 
         fetchData();
-    }, []);
+    }, [mt]);
 
     if (loading) return <p className="p-6 text-center">Loading dashboard...</p>;
 
     return (
         <HostLayout>
-
             <p>{mt}</p>
 
             {/* Stats Section */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold">Games Created</h2>
@@ -59,9 +58,7 @@ export default function DashboardHost() {
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold">Top Participant</h2>
-                        <p className="font-bold">
-                            {stats?.topParticipant?.name || "N/A"}
-                        </p>
+                        <p className="font-bold">{stats?.topParticipant?.name || "N/A"}</p>
                         <p className="text-sm opacity-80">
                             Attempts: {stats?.topParticipant?.attempts || 0}
                         </p>
@@ -72,9 +69,7 @@ export default function DashboardHost() {
                 <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold">Top Scorer</h2>
-                        <p className="font-bold">
-                            {stats?.topScorer?.name || "N/A"}
-                        </p>
+                        <p className="font-bold">{stats?.topScorer?.name || "N/A"}</p>
                         <p className="text-sm opacity-80">
                             Score: {stats?.topScorer?.score || 0}
                         </p>
@@ -100,26 +95,22 @@ export default function DashboardHost() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {stats?.gameStats?.map((game, index) => (
-                                    <tr
-                                        key={game.gameId}
-                                        className="text-gray-800 text-sm hover:bg-gray-50"
-                                    >
-                                        <td className="p-3 border">{index + 1}</td>
-                                        <td className="p-3 border font-medium">{game.title}</td>
-                                        <td className="p-3 border font-mono text-blue-600">{game.gameCode}</td>
-                                        <td className="p-3 border">{game.totalQuestions}</td>
-                                        <td className="p-3 border">{game.totalAttempts}</td>
-                                        <td className="p-3 border text-gray-600">
-                                            {games?._id
-                                                ? getTimestampFromObjectId(String(games._id)).toLocaleString()
-                                                : "N/A"}
-                                        </td>
-
-
-                                    </tr>
-
-                                ))}
+                                {games.map((game, index) => {
+                                    // Find corresponding stats for this game
+                                    const gameStat = stats?.gameStats?.find(gs => gs.gameId === game._id);
+                                    return (
+                                        <tr key={game._id} className="text-gray-800 text-sm hover:bg-gray-50">
+                                            <td className="p-3 border">{index + 1}</td>
+                                            <td className="p-3 border font-medium">{game.title}</td>
+                                            <td className="p-3 border font-mono text-blue-600">{game.gameCode}</td>
+                                            <td className="p-3 border">{game.questions?.length || 0}</td>
+                                            <td className="p-3 border">{gameStat?.totalAttempts || 0}</td>
+                                            <td className="p-3 border text-gray-600">
+                                                {new Date(game.createdAt).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
