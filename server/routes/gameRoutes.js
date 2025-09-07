@@ -80,6 +80,62 @@ router.get("/host/attempts", auth(["host"]), async (req, res) => {
         res.status(500).json({ error: "Failed to fetch host attempts" });
     }
 });
+// ✅ Publish / Unpublish a game
+router.patch("/publish/:id", auth(["host"]), async (req, res) => {
+    try {
+        const { isPublished } = req.body;
+
+        const game = await Game.findOne({ _id: req.params.id, host: req.user.id });
+        if (!game) return res.status(404).json({ msg: "Game not found or not owned by you" });
+
+        game.isPublished = isPublished;
+        await game.save();
+
+        res.json({ msg: `Game ${isPublished ? "published" : "unpublished"} successfully`, game });
+    } catch (err) {
+        console.error("Error publishing game:", err);
+        res.status(500).json({ error: "Failed to update game" });
+    }
+});
+
+
+// ✅ Delete a game
+router.delete("/delete/:id", auth(["host"]), async (req, res) => {
+    try {
+        const game = await Game.findOneAndDelete({ _id: req.params.id, host: req.user.id });
+        if (!game) return res.status(404).json({ msg: "Game not found or not owned by you" });
+
+        // Remove attempts linked to this game
+        await GameResponse.deleteMany({ game: game._id });
+
+        res.json({ msg: "Game and related attempts deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting game:", err);
+        res.status(500).json({ error: "Failed to delete game" });
+    }
+});
+
+
+// ✅ Edit / Update a game (title, questions, etc.)
+router.put("/edit/:id", auth(["host"]), async (req, res) => {
+    try {
+        const { title, description, questions } = req.body;
+
+        const game = await Game.findOneAndUpdate(
+            { _id: req.params.id, host: req.user.id },
+            { title, description, questions },
+            { new: true, runValidators: true }
+        );
+
+        if (!game) return res.status(404).json({ msg: "Game not found or not owned by you" });
+
+        res.json({ msg: "Game updated successfully", game });
+    } catch (err) {
+        console.error("Error updating game:", err);
+        res.status(500).json({ error: "Failed to update game" });
+    }
+});
+
 
 // ✅ Get dashboard stats for host
 // ✅ Get dashboard stats for host

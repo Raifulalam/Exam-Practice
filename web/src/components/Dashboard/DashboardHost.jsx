@@ -132,7 +132,7 @@ export default function HostAdminPanel() {
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                         <div>
                             <h2 className="text-lg font-semibold">Games Created</h2>
-                            <p className="text-4xl font-bold">{stats?.gameCount || 0}</p>
+                            <p className="text-4xl font-bold">{games.length || 0}</p>
                         </div>
                         <Gamepad2 className="w-10 h-10 opacity-80" />
                     </div>
@@ -140,7 +140,7 @@ export default function HostAdminPanel() {
                     <div className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg rounded-2xl p-6 flex items-center justify-between">
                         <div>
                             <h2 className="text-lg font-semibold">Top Participant</h2>
-                            <p className="font-bold">{stats?.topParticipant?.name || "N/A"}</p>
+                            <p className="font-bold">{stats?.topParticipant || "N/A"}</p>
                             <p className="text-sm opacity-80">
                                 Attempts: {stats?.topParticipant?.attempts || 0}
                             </p>
