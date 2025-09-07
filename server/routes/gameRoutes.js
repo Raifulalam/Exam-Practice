@@ -45,6 +45,7 @@ router.get("/mine", auth(["host"]), async (req, res) => {
     }
 });
 
+
 // ✅ Player attempts game
 router.post("/:gameId/attempt", auth(["host"]), async (req, res) => {
     try {
@@ -78,6 +79,7 @@ router.post("/:gameId/attempt", auth(["host"]), async (req, res) => {
     }
 });
 
+
 // ✅ Get attempts of a player
 router.get("/attempts/me", auth(["player"]), async (req, res) => {
     try {
@@ -101,7 +103,7 @@ router.get("/host/attempts", auth(["host"]), async (req, res) => {
 
         // Fetch attempts for those games
         const attempts = await GameResponse.find({ game: { $in: gameIds } })
-            .populate("player", "name email")   // who attempted
+            .populate("player", "name email")   // who attempted
             .populate("game", "title gameCode questions truths dares"); // which game
 
         // format response with score & percentage
@@ -172,6 +174,7 @@ router.get("/all", auth(["player", "host"]), async (req, res) => {
     }
 });
 
+
 // ✅ Get host dashboard stats
 // ✅ Get host dashboard stats
 router.get("/host/stats", auth(["host"]), async (req, res) => {
@@ -235,6 +238,8 @@ router.get("/host/stats", auth(["host"]), async (req, res) => {
         res.status(500).json({ error: "Failed to fetch host stats" });
     }
 });
+
+
 
 // GET /api/games/join/:code
 router.get("/join/:code", async (req, res) => {
