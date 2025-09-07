@@ -10,8 +10,8 @@ app.use(express.json());
 app.use(cors());
 
 app.get('/', (req, res) => {
-    console.log("Success");
-    res.send("Server is running successfully!");
+  console.log("Success");
+  res.send("Server is running successfully!");
 });
 
 // Route imports
@@ -19,6 +19,7 @@ const authRoutes = require("./routes/auth");
 const protectedRoutes = require("./routes/protected");
 const practiceRoutes = require("./routes/practice");
 const gameRoutes = require("./routes/gameRoutes");
+const adminRoutes = require("./routes/admin");
 
 // Route uses
 app.use("/api/auth", authRoutes);
@@ -28,6 +29,7 @@ app.use("/api/practice-sets", require("./routes/practiceSet"));
 app.use("/api", require("./routes/score"));
 app.use("/api/cee", require("./routes/ceeScoreRoutes"));
 app.use("/api/games", gameRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ✅ Connect to MongoDB first, then start the server
 mongoose
