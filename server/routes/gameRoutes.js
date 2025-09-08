@@ -1,12 +1,14 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const Exam = require("../models/Exam");
 const ExamResponse = require("../models/ExamResponse");
-const auth = require("../middleware/auth"); // ✅ assumes you already have role-based auth
+const auth = require("../middleware/auth");
+
 const router = express.Router();
-const mongoose = require("mongoose");
 
-
-// 🟢 Create Exam (only teachers/hosts)
+/**
+ * ✅ Create Exam (only hosts/teachers)
+ */
 router.post("/create", auth(["host"]), async (req, res) => {
     try {
         const {
@@ -36,347 +38,244 @@ router.post("/create", auth(["host"]), async (req, res) => {
             duration,
             startTime,
             endTime,
-            createdBy: req.user.id, // host from token
+            createdBy: req.user.id,
             examCode
         });
 
         await exam.save();
 
-        res.status(201).json({
-            message: "Exam created successfully",
-            exam
-        });
+        res.status(201).json({ message: "Exam created successfully", exam });
     } catch (err) {
-        console.error("Error creating exam:", err.message);
+        console.error("Error creating exam:", err);
         res.status(500).json({ error: "Failed to create exam" });
     }
 });
 
-// ✅ Get all games
-// ✅ Get games created by the logged-in host
+/**
+ * ✅ Get all exams created by logged-in host
+ */
 router.get("/mine", auth(["host"]), async (req, res) => {
     try {
-        const games = await Game.find({ host: req.user.id })
-            .sort({ createdAt: -1 }); // latest first
-        res.json(games);
+        const exams = await Exam.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
+        res.json(exams);
     } catch (error) {
-        console.error("Error fetching host games:", error);
-        res.status(500).json({ error: "Failed to fetch host games" });
+        console.error("Error fetching host exams:", error);
+        res.status(500).json({ error: "Failed to fetch exams" });
     }
 });
 
-
-// ✅ Player attempts game
-router.post("/:gameId/attempt", auth(["host"]), async (req, res) => {
+/**
+ * ✅ Attempt Exam (player submits responses)
+ */
+router.post("/:examId/attempt", auth(["player"]), async (req, res) => {
     try {
-        const { responses } = req.body; // [{questionId, answer}, ...]
-
-        const game = await Game.findById(req.params.gameId);
-        if (!game) return res.status(404).json({ error: "Game not found" });
+        const { responses } = req.body; // [{questionId, givenAnswer, timeTaken}]
+        const exam = await Exam.findById(req.params.examId);
+        if (!exam) return res.status(404).json({ error: "Exam not found" });
 
         let score = 0;
+        const evaluatedResponses = responses.map(r => {
+            const q = exam.questions.find(q => String(q._id) === String(r.questionId));
+            if (!q) return { ...r, isCorrect: null, marksObtained: 0 };
 
-        const evaluatedResponses = responses.map((r) => {
-            const q = game.questions.find(q => String(q._id) === String(r.questionId));
+            let isCorrect = false;
+            if (q.questionType === "mcq" || q.questionType === "true_false") {
+                isCorrect = q.correctAnswer === r.givenAnswer;
+            } else if (q.questionType === "short_answer") {
+                isCorrect = q.correctAnswer.toLowerCase().trim() === String(r.givenAnswer).toLowerCase().trim();
+            }
 
-            const correct = game.gameType === "quiz" && q ? q.answer === r.answer : null;
-            if (correct) score++;
+            const marksObtained = isCorrect
+                ? q.marks
+                : exam.settings?.allowNegativeMarking
+                    ? -q.negativeMarks
+                    : 0;
 
-            return { questionId: r.questionId, answer: r.answer, correct };
+            score += marksObtained;
+
+            return {
+                questionId: r.questionId,
+                givenAnswer: r.givenAnswer,
+                isCorrect,
+                marksObtained,
+                timeTaken: r.timeTaken || 0
+            };
         });
 
-        const attempt = await GameResponse.create({
-            game: game._id,
+        const percentage = exam.totalMarks > 0 ? (score / exam.totalMarks) * 100 : 0;
+
+        const attempt = await ExamResponse.create({
+            exam: exam._id,
             player: req.user.id,
             responses: evaluatedResponses,
-            score
+            score,
+            percentage,
+            status: "completed",
+            completedAt: new Date()
         });
 
-        res.status(201).json({ msg: "Attempt saved", attempt });
+        res.status(201).json({ msg: "Attempt saved", attempt, evaluatedResponses });
     } catch (error) {
-        console.error("Error saving attempt:", error);
+        console.error("Error saving exam attempt:", error);
         res.status(500).json({ error: "Failed to save attempt" });
     }
 });
 
-
-// ✅ Get attempts of a player
+/**
+ * ✅ Get attempts of logged-in player
+ */
 router.get("/attempts/me", auth(["player"]), async (req, res) => {
     try {
-        const attempts = await GameResponse.find({ player: req.user.id })
-            .populate("game", "title gameType questions") // populate game title and questions
+        const attempts = await ExamResponse.find({ player: req.user.id })
+            .populate("exam", "title subject duration totalMarks")
             .lean();
 
         res.json({ attempts });
     } catch (err) {
-        console.error(err);
+        console.error("Error fetching player attempts:", err);
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });
 
-// ✅ Get all attempts for host's games with player details
+/**
+ * ✅ Get all attempts for exams created by this host
+ */
 router.get("/host/attempts", auth(["host"]), async (req, res) => {
     try {
-        // Find all games created by this host
-        const myGames = await Game.find({ host: req.user.id });
-        const gameIds = myGames.map(g => g._id);
+        const myExams = await Exam.find({ createdBy: req.user.id });
+        const examIds = myExams.map(e => e._id);
 
-        // Fetch attempts for those games
-        const attempts = await GameResponse.find({ game: { $in: gameIds } })
-            .populate("player", "name email")   // who attempted
-            .populate("game", "title gameCode questions truths dares"); // which game
+        const attempts = await ExamResponse.find({ exam: { $in: examIds } })
+            .populate("player", "name email")
+            .populate("exam", "title examCode totalMarks");
 
-        // format response with score & percentage
-        const formatted = attempts.map(a => {
-            const totalQuestions = a.game.questions?.length || a.game.truths?.length || a.game.dares?.length || 0;
-            const percentage = totalQuestions > 0 ? Math.round((a.score / totalQuestions) * 100) : null;
-
-            return {
-                attemptId: a._id,
-                gameId: a.game._id,
-                gameTitle: a.game.title,
-                gameCode: a.game.gameCode,
-                playerName: a.player.name,
-                playerEmail: a.player.email,
-                score: a.score,
-                percentage,
-                attemptedAt: a.createdAt
-            };
-        });
+        const formatted = attempts.map(a => ({
+            attemptId: a._id,
+            examId: a.exam._id,
+            examTitle: a.exam.title,
+            examCode: a.exam.examCode,
+            playerName: a.player?.name,
+            playerEmail: a.player?.email,
+            score: a.score,
+            percentage: a.percentage,
+            attemptedAt: a.createdAt
+        }));
 
         res.json(formatted);
     } catch (error) {
         console.error("Error fetching host attempts:", error);
-        res.status(500).json({ error: "Failed to fetch host attempts" });
-    }
-});
-// GET attempts for a specific game by host
-router.get("/host/attempts/:gameCode", auth(["host"]), async (req, res) => {
-    try {
-        const game = await Game.findOne({ host: req.user.id, gameCode: req.params.gameCode });
-        if (!game) return res.status(404).json({ error: "Game not found" });
-
-        const attempts = await GameResponse.find({ game: game._id })
-            .populate("player", "name email");
-
-        const formatted = attempts.map(a => {
-            const totalQuestions = game.questions?.length || game.truths?.length || game.dares?.length || 0;
-            const percentage = totalQuestions > 0 ? Math.round((a.score / totalQuestions) * 100) : null;
-
-            return {
-                attemptId: a._id,
-                playerName: a.player.name,
-                playerEmail: a.player.email,
-                score: a.score,
-                percentage,
-                attemptedAt: a.createdAt
-            };
-        });
-
-        res.json(formatted);
-    } catch (error) {
-        console.error("Error fetching attempts for game:", error);
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });
 
-// ✅ Get all games (for players to browse)
+/**
+ * ✅ Get attempts for a specific exam by examCode
+ */
+router.get("/host/attempts/:examCode", auth(["host"]), async (req, res) => {
+    try {
+        const exam = await Exam.findOne({ createdBy: req.user.id, examCode: req.params.examCode });
+        if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+        const attempts = await ExamResponse.find({ exam: exam._id }).populate("player", "name email");
+
+        const formatted = attempts.map(a => ({
+            attemptId: a._id,
+            playerName: a.player?.name,
+            playerEmail: a.player?.email,
+            score: a.score,
+            percentage: a.percentage,
+            attemptedAt: a.createdAt
+        }));
+
+        res.json(formatted);
+    } catch (error) {
+        console.error("Error fetching exam attempts:", error);
+        res.status(500).json({ error: "Failed to fetch attempts" });
+    }
+});
+
+/**
+ * ✅ Get all exams (for browsing/joining)
+ */
 router.get("/all", auth(["player", "host"]), async (req, res) => {
     try {
-        const games = await Game.find()
-            .populate("host", "name email") // show host details
-            .select("title gameType descriptions gameCode host createdAt questions");
+        const exams = await Exam.find()
+            .populate("createdBy", "name email")
+            .select("title subject examCode duration totalMarks createdAt");
 
-        res.json(games);
+        res.json(exams);
     } catch (error) {
-        console.error("Error fetching games:", error);
-        res.status(500).json({ error: "Failed to fetch games" });
+        console.error("Error fetching exams:", error);
+        res.status(500).json({ error: "Failed to fetch exams" });
     }
 });
 
-
-// ✅ Get host dashboard stats
-// ✅ Get host dashboard stats
-router.get("/host/stats", auth(["host"]), async (req, res) => {
-    try {
-        console.log("Host stats requested by:", req.user);
-
-        // 1️⃣ Fetch all games created by this host
-        const myGames = await Game.find({ host: req.user.id });
-        const gameCount = myGames.length;
-        const gameIds = myGames.map(g => g._id);
-
-        // 2️⃣ Fetch all attempts for these games
-        const attempts = await GameResponse.find({ game: { $in: gameIds } })
-            .populate("player", "name email")
-            .populate("game", "title gameCode questions truths dares");
-
-        // 3️⃣ Summary per game
-        const gameStats = myGames.map(game => {
-            const gameAttempts = attempts.filter(a => a.game && String(a.game._id) === String(game._id));
-            return {
-                gameId: game._id,
-                title: game.title,
-                gameCode: game.gameCode,
-                totalQuestions:
-                    game.questions?.length ||
-                    game.truths?.length ||
-                    game.dares?.length ||
-                    0,
-                totalAttempts: gameAttempts.length,
-            };
-        });
-
-        // 4️⃣ Compute cumulative scores per player (leaderboard)
-        const leaderboardMap = {};
-        attempts.forEach(a => {
-            if (!a.player) return; // skip if player is missing
-            const playerId = a.player._id.toString();
-            if (!leaderboardMap[playerId]) {
-                leaderboardMap[playerId] = {
-                    playerId,
-                    name: a.player.name,
-                    email: a.player.email,
-                    totalScore: 0,
-                    totalAttempts: 0,
-                };
-            }
-            leaderboardMap[playerId].totalScore += a.score || 0;
-            leaderboardMap[playerId].totalAttempts += 1;
-        });
-
-        const leaderboard = Object.values(leaderboardMap).sort(
-            (a, b) => b.totalScore - a.totalScore
-        );
-
-        // 5️⃣ Determine top scorer and top participant
-        const topScorer = leaderboard[0] || null;
-
-        const topParticipant = leaderboard.reduce((max, player) => {
-            return player.totalAttempts > (max?.totalAttempts || 0) ? player : max;
-        }, null);
-
-        // 6️⃣ Return stats
-        return res.json({
-            gameCount,
-            totalAttempts: attempts.length,
-            gameStats,
-            topScorer,
-            topParticipant,
-            leaderboard // optional: include full leaderboard
-        });
-
-    } catch (error) {
-        console.error("Error fetching host stats:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-
-
-
-
-// GET /api/games/join/:code
+/**
+ * ✅ Join exam by code
+ */
 router.get("/join/:code", async (req, res) => {
-    const code = req.params.code;
-    console.log("Join request received for code:", code);
-
     try {
-        const game = await Game.findOne({ gameCode: code });
-        console.log("Game found:", game);
+        const exam = await Exam.findOne({ examCode: req.params.code });
+        if (!exam) return res.status(404).json({ error: "Exam not found" });
 
-        if (!game) return res.status(404).json({ error: "Game not found" });
-
-        res.json(game);
+        res.json(exam);
     } catch (err) {
-        console.error("Error joining game:", err);
+        console.error("Error joining exam:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
 
-// POST /api/games/attempt/code/:gameCode
-router.post("/attempt/code/:gameCode", auth(["player"]), async (req, res) => {
-    try {
-        const { responses } = req.body; // [{questionId, answer}, ...]
-        const game = await Game.findOne({ gameCode: req.params.gameCode });
-        if (!game) return res.status(404).json({ error: "Game not found" });
-
-        // Evaluate responses (only for quiz)
-        let score = 0;
-        const evaluatedResponses = responses.map(r => {
-            const q = game.questions.find(q => String(q._id) === String(r.questionId));
-            const correct = game.gameType === "quiz" && q ? q.answer === r.answer : null;
-            if (correct) score++;
-            return { questionId: r.questionId, answer: r.answer, correct };
-        });
-
-        // Save attempt
-        const attempt = await GameResponse.create({
-            game: game._id,
-            player: req.user.id, // use decoded user id from token
-            responses: evaluatedResponses,
-            score
-        });
-        res.status(201).json({
-            msg: "Attempt saved",
-            attempt,
-            evaluatedResponses // include this for frontend feedback
-        });
-    } catch (error) {
-        console.error("Error saving attempt:", error);
-        res.status(500).json({ error: "Failed to save attempt" });
-    }
-});
+/**
+ * ✅ Get all attempts (admin/debug)
+ */
 router.get("/attempts", async (req, res) => {
     try {
-        // populate player details instead of just player ID
-        const attempts = await GameResponse.find()
-            .populate("player", "name email") // fetch player info
-            .populate("game", "title"); // optional: fetch game title
-
+        const attempts = await ExamResponse.find()
+            .populate("player", "name email")
+            .populate("exam", "title");
         res.json(attempts);
     } catch (err) {
         console.error("Error fetching attempts:", err);
         res.status(500).json({ error: "Failed to fetch attempts" });
     }
 });
+
+/**
+ * ✅ Leaderboard across all exams
+ */
 router.get("/leaderboard/full", async (req, res) => {
     try {
-        const playerGameScores = await GameResponse.aggregate([
-            // group by player + game
+        const playerExamScores = await ExamResponse.aggregate([
             {
                 $group: {
-                    _id: { player: "$player", game: "$game" },
-                    totalScorePerGame: { $sum: "$score" },
-                    attemptsPerGame: { $sum: 1 }
+                    _id: { player: "$player", exam: "$exam" },
+                    totalScorePerExam: { $sum: "$score" },
+                    attemptsPerExam: { $sum: 1 }
                 }
             },
-            // lookup player info
             {
                 $lookup: {
-                    from: "users",           // your User collection name
+                    from: "users",
                     localField: "_id.player",
                     foreignField: "_id",
                     as: "player"
                 }
             },
-            { $unwind: "$player" },      // flatten the array
-            // lookup game info
+            { $unwind: "$player" },
             {
                 $lookup: {
-                    from: "games",           // your Game collection name
-                    localField: "_id.game",
+                    from: "exams",
+                    localField: "_id.exam",
                     foreignField: "_id",
-                    as: "game"
+                    as: "exam"
                 }
             },
-            { $unwind: "$game" },        // flatten the array
-            { $sort: { totalScorePerGame: -1 } } // sort descending
+            { $unwind: "$exam" },
+            { $sort: { totalScorePerExam: -1 } }
         ]);
 
-        // merge scores per player
         const leaderboardMap = {};
-        playerGameScores.forEach(entry => {
+        playerExamScores.forEach(entry => {
             const playerId = entry.player._id.toString();
             if (!leaderboardMap[playerId]) {
                 leaderboardMap[playerId] = {
@@ -385,33 +284,88 @@ router.get("/leaderboard/full", async (req, res) => {
                     email: entry.player.email,
                     totalScore: 0,
                     totalAttempts: 0,
-                    games: []
+                    exams: []
                 };
             }
-            leaderboardMap[playerId].totalScore += entry.totalScorePerGame;
-            leaderboardMap[playerId].totalAttempts += entry.attemptsPerGame;
+            leaderboardMap[playerId].totalScore += entry.totalScorePerExam;
+            leaderboardMap[playerId].totalAttempts += entry.attemptsPerExam;
 
-            leaderboardMap[playerId].games.push({
-                gameId: entry.game._id,
-                title: entry.game.title,
-                gameCode: entry.game.gameCode,
-                score: entry.totalScorePerGame,
-                attempts: entry.attemptsPerGame
+            leaderboardMap[playerId].exams.push({
+                examId: entry.exam._id,
+                title: entry.exam.title,
+                examCode: entry.exam.examCode,
+                score: entry.totalScorePerExam,
+                attempts: entry.attemptsPerExam
             });
         });
 
-        const leaderboard = Object.values(leaderboardMap).sort(
-            (a, b) => b.totalScore - a.totalScore
-        );
+        const leaderboard = Object.values(leaderboardMap).sort((a, b) => b.totalScore - a.totalScore);
 
         res.json(leaderboard);
-
     } catch (err) {
         console.error("Error fetching full leaderboard:", err);
         res.status(500).json({ error: err.message });
     }
 });
 
+/**
+ * ✅ Host dashboard stats
+ */
+router.get("/host/stats", auth(["host"]), async (req, res) => {
+    try {
+        const myExams = await Exam.find({ createdBy: req.user.id });
+        const examCount = myExams.length;
+        const examIds = myExams.map(e => e._id);
 
+        const attempts = await ExamResponse.find({ exam: { $in: examIds } })
+            .populate("player", "name email")
+            .populate("exam", "title examCode questions");
+
+        const examStats = myExams.map(exam => {
+            const examAttempts = attempts.filter(a => a.exam && String(a.exam._id) === String(exam._id));
+            return {
+                examId: exam._id,
+                title: exam.title,
+                examCode: exam.examCode,
+                totalQuestions: exam.questions?.length || 0,
+                totalAttempts: examAttempts.length
+            };
+        });
+
+        const leaderboardMap = {};
+        attempts.forEach(a => {
+            if (!a.player) return;
+            const playerId = a.player._id.toString();
+            if (!leaderboardMap[playerId]) {
+                leaderboardMap[playerId] = {
+                    playerId,
+                    name: a.player.name,
+                    email: a.player.email,
+                    totalScore: 0,
+                    totalAttempts: 0
+                };
+            }
+            leaderboardMap[playerId].totalScore += a.score || 0;
+            leaderboardMap[playerId].totalAttempts += 1;
+        });
+
+        const leaderboard = Object.values(leaderboardMap).sort((a, b) => b.totalScore - a.totalScore);
+
+        res.json({
+            examCount,
+            totalAttempts: attempts.length,
+            examStats,
+            topScorer: leaderboard[0] || null,
+            topParticipant: leaderboard.reduce(
+                (max, player) => (player.totalAttempts > (max?.totalAttempts || 0) ? player : max),
+                null
+            ),
+            leaderboard
+        });
+    } catch (error) {
+        console.error("Error fetching host stats:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 module.exports = router;
