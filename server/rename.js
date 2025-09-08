@@ -6,9 +6,9 @@ async function renameCollection() {
     const db = mongoose.connection.db;
 
     try {
-        // await db.collection("gameresponses").rename("examresponses");
-        // console.log("Collection renamed successfully!");
-        await db.collection("games").rename("exams");
+        await db.collection("examresponses").rename("gameresponses");
+        console.log("Collection renamed successfully!");
+        await db.collection("exams").rename("games");
         console.log("Collection renamed successfully!");
     } catch (err) {
         console.error("Error renaming:", err);

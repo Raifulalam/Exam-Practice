@@ -44,7 +44,7 @@ const QuestionSchema = new mongoose.Schema(
 );
 
 
-const ExamSchema = new mongoose.Schema(
+const GameSchema = new mongoose.Schema(
     {
         title: { type: String, required: true, trim: true },
         subject: { type: String, required: true, trim: true },
@@ -75,4 +75,4 @@ const ExamSchema = new mongoose.Schema(
 );
 
 
-module.exports = mongoose.model("Exam", ExamSchema);
+module.exports = mongoose.model("Game", GameSchema);

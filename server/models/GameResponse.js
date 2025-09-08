@@ -13,7 +13,7 @@ const ResponseSchema = new mongoose.Schema(
     { _id: false }
 );
 
-const ExamResponseSchema = new mongoose.Schema(
+const GameResponseSchema = new mongoose.Schema(
     {
         exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true }, // ✅ fix
         student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // ✅ fix
@@ -36,4 +36,4 @@ const ExamResponseSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model("ExamResponse", ExamResponseSchema);
+module.exports = mongoose.model("GameResponse", GameResponseSchema);
