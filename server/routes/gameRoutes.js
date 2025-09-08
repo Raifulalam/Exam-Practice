@@ -1,7 +1,7 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const Game = require("../models/Game.js");
-const GameResponse = require("../models/GameResponse");
+const GameResponse = require("../models/GameResponse.js");
 
 const router = express.Router();
 

@@ -98,14 +98,14 @@ export default function DashboardPlayer() {
                 2
             )
             : 0;
-
+    let mytok = localStorage.getItem('token')
     return (
         <PlayerLayout>
             <div className="p-6">
                 <h1 className="text-3xl font-bold mb-6 text-center">
                     🎮 Player Dashboard
                 </h1>
-
+                <p>{mytok}</p>
                 <div className="grid md:grid-cols-3 gap-6">
                     {/* Analytics */}
                     <div className="bg-white shadow-lg rounded-2xl p-4 col-span-2">
