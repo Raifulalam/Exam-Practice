@@ -11,7 +11,7 @@ import {
     CartesianGrid,
     Legend,
 } from "recharts";
-import { Trophy, Users, Gamepad2, Crown, Star, Search } from "lucide-react";
+import { Trophy, Users, Gamepad2, Crown, Star, Search, ChevronDown, ChevronRight } from "lucide-react";
 import CountUp from "react-countup";
 
 export default function HostDashboard() {
@@ -19,6 +19,7 @@ export default function HostDashboard() {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [expandedSubjects, setExpandedSubjects] = useState({}); // Track expanded subjects
 
     const token = localStorage.getItem("token");
 
@@ -53,15 +54,32 @@ export default function HostDashboard() {
         return <p className="p-6 text-center text-gray-600 animate-pulse">Loading dashboard...</p>;
 
     const topPlayers = stats?.leaderboard?.slice(0, 5) || [];
-    const filteredGames = games.filter((g) =>
-        g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.gameCode.toLowerCase().includes(searchQuery.toLowerCase())
+
+    // Filter games based on search
+    const filteredGames = games.filter(
+        (g) =>
+            g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            g.gameCode.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // Group games by subject
+    const gamesBySubject = filteredGames.reduce((acc, game) => {
+        if (!acc[game.subject]) acc[game.subject] = [];
+        acc[game.subject].push(game);
+        return acc;
+    }, {});
+
+    const toggleSubject = (subject) => {
+        setExpandedSubjects((prev) => ({
+            ...prev,
+            [subject]: !prev[subject],
+        }));
+    };
 
     return (
         <HostLayout>
             <div className="p-6 space-y-8">
-                {/* Stats Cards */}
+                {/* --- Stats Cards --- */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <StatCard icon={<Gamepad2 />} title="Games Created" value={stats?.gameCount || 0} color="blue" />
                     <StatCard icon={<Users />} title="Total Attempts" value={stats?.totalAttempts || 0} color="green" />
@@ -80,7 +98,7 @@ export default function HostDashboard() {
                     />
                 </div>
 
-                {/* Top Players Podium */}
+                {/* --- Top Players Podium --- */}
                 <div className="bg-white shadow-lg rounded-xl p-6">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                         <Crown className="w-6 h-6 text-yellow-500" /> Top Players
@@ -90,10 +108,10 @@ export default function HostDashboard() {
                             <div
                                 key={player.playerId}
                                 className={`flex flex-col items-center justify-end p-4 rounded-xl shadow-md w-36 ${index === 0
-                                        ? "bg-yellow-100 h-52"
-                                        : index === 1
-                                            ? "bg-gray-100 h-44"
-                                            : "bg-orange-100 h-36"
+                                    ? "bg-yellow-100 h-52"
+                                    : index === 1
+                                        ? "bg-gray-100 h-44"
+                                        : "bg-orange-100 h-36"
                                     }`}
                             >
                                 <span className="text-3xl mb-2">{index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}</span>
@@ -118,7 +136,7 @@ export default function HostDashboard() {
                     )}
                 </div>
 
-                {/* Attempts Per Game Chart */}
+                {/* --- Attempts Per Game Chart --- */}
                 <div className="bg-white rounded-xl shadow p-6">
                     <h3 className="text-lg font-semibold mb-4 text-gray-700">Attempts Per Game</h3>
                     <ResponsiveContainer width="100%" height={300}>
@@ -133,7 +151,7 @@ export default function HostDashboard() {
                     </ResponsiveContainer>
                 </div>
 
-                {/* Searchable Games Table */}
+                {/* --- Searchable Games Accordion by Subject (Animated) --- */}
                 <div className="bg-white rounded-xl shadow p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold">🎮 My Created Games</h2>
@@ -149,40 +167,73 @@ export default function HostDashboard() {
                         </div>
                     </div>
 
-                    {filteredGames.length === 0 ? (
+                    {Object.keys(gamesBySubject).length === 0 ? (
                         <p className="text-gray-600">No games found.</p>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-100 text-gray-700 text-left">
-                                        <th className="p-3 border">#</th>
-                                        <th className="p-3 border">Title</th>
-                                        <th className="p-3 border">Code</th>
-                                        <th className="p-3 border">Questions</th>
-                                        <th className="p-3 border">Attempts</th>
-                                        <th className="p-3 border">Created At</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredGames.map((game, index) => {
-                                        const gameStat = stats?.gameStats?.find((gs) => gs.gameId === game._id);
-                                        return (
-                                            <tr key={game._id} className="text-gray-800 text-sm hover:bg-gray-50">
-                                                <td className="p-3 border">{index + 1}</td>
-                                                <td className="p-3 border font-medium">{game.title}</td>
-                                                <td className="p-3 border font-mono text-blue-600">{game.gameCode}</td>
-                                                <td className="p-3 border">{game.questions?.length || 0}</td>
-                                                <td className="p-3 border">{gameStat?.totalAttempts || 0}</td>
-                                                <td className="p-3 border text-gray-600">{new Date(game.createdAt).toLocaleString()}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                        Object.entries(gamesBySubject).map(([subject, games]) => (
+                            <div key={subject} className="mb-4 border rounded overflow-hidden">
+                                {/* Subject Header */}
+                                <button
+                                    onClick={() => toggleSubject(subject)}
+                                    className="w-full flex justify-between items-center p-3 bg-gray-100 hover:bg-gray-200 rounded-t"
+                                >
+                                    <span className="font-semibold">{subject} ({games.length})</span>
+                                    {expandedSubjects[subject] ? (
+                                        <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+                                    ) : (
+                                        <ChevronRight className="w-4 h-4 transition-transform duration-300" />
+                                    )}
+                                </button>
+
+                                {/* Collapsible Games Table with smooth animation */}
+                                <div
+                                    className={`transition-all duration-500 ease-in-out overflow-hidden`}
+                                    style={{
+                                        maxHeight: expandedSubjects[subject] ? "2000px" : "0px",
+                                    }}
+                                >
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse">
+                                            <thead>
+                                                <tr className="bg-gray-50 text-gray-700 text-left">
+                                                    <th className="p-3 border">#</th>
+                                                    <th className="p-3 border">Title</th>
+                                                    <th className="p-3 border">Code</th>
+                                                    <th className="p-3 border">Questions</th>
+                                                    <th className="p-3 border">Attempts</th>
+                                                    <th className="p-3 border">Created At</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {games.map((game, index) => {
+                                                    const gameStat = stats?.gameStats?.find(
+                                                        (gs) => gs.gameId === game._id
+                                                    );
+                                                    return (
+                                                        <tr
+                                                            key={game._id}
+                                                            className="text-gray-800 text-sm hover:bg-gray-50"
+                                                        >
+                                                            <td className="p-3 border">{index + 1}</td>
+                                                            <td className="p-3 border font-medium">{game.title}</td>
+                                                            <td className="p-3 border font-mono text-blue-600">{game.gameCode}</td>
+                                                            <td className="p-3 border">{game.questions?.length || 0}</td>
+                                                            <td className="p-3 border">{gameStat?.totalAttempts || 0}</td>
+                                                            <td className="p-3 border text-gray-600">
+                                                                {new Date(game.createdAt).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
+
             </div>
         </HostLayout>
     );
