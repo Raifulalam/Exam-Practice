@@ -1,49 +1,35 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const Game = require("../models/Game.js");
-const GameResponse = require("../models/GameResponse.js");
+const GameResponse = require("../models/GameResponse");
 
 const router = express.Router();
 
 // ✅ Create a game (host only)
 router.post("/create", auth(["host"]), async (req, res) => {
     try {
-        const {
-            title,
-            subject,
-            description,
-            questions,
-            totalMarks,
-            passingMarks,
-            duration,
-            startTime,
-            endTime,
-            examCode
-        } = req.body;
-        if (!title || !subject || !duration || !examCode) {
-            return res.status(400).json({ error: "Title, subject, duration, and examCode are required" });
+        const { title, gameType, questions, gameCode, description, subject } = req.body;
+
+        if (!title || !gameType) {
+            return res.status(400).json({ msg: "Title and type are required" });
         }
 
         const newGame = new Game({
             title,
+            gameType,
             subject,
-            description,
-            questions,
-            totalMarks,
-            passingMarks,
-            duration,
-            startTime,
-            endTime,
-            createdBy: req.user.id, // host from token
-            examCode
+            questions: questions || [],
+            host: req.user.id, // from token
+            gameCode,
+            description
         });
 
         await newGame.save();
 
-        return res.status(201).json({ message: "Exam created successfully", game: newGame });
+        return res.status(201).json({ msg: "Game created", game: newGame });
     } catch (err) {
-        console.error("Error creating exam:", err.message);
-        res.status(500).json({ error: "Failed to create exam" });
+        console.error("Error creating game:", err.message);
+        return res.status(500).json({ msg: "Server error" });
     }
 });
 

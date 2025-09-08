@@ -137,7 +137,7 @@ export default function Analytics() {
                                     Attempts Per Game
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={stats.gameStats}>
+                                    <BarChart data={stats?.gameStats}>
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="title" />
                                         <YAxis />

@@ -17,13 +17,9 @@ const QuestionSchema = new mongoose.Schema({
         type: String,
         trim: true, // Correct answer for quiz
     },
-    marks: {
-        type: Number,
-        default: 1, // Each question default 1 mark
-    },
 });
 
-// -------------------- Game/Exam Schema --------------------
+// -------------------- Game Schema --------------------
 const GameSchema = new mongoose.Schema(
     {
         host: {
@@ -33,9 +29,8 @@ const GameSchema = new mongoose.Schema(
         },
         gameType: {
             type: String,
-            enum: ["quiz", "truth", "dare", "exam"], // added "exam" explicitly
+            enum: ["quiz", "truth", "dare"],
             required: true,
-            default: "quiz",
         },
         title: {
             type: String,
@@ -52,40 +47,11 @@ const GameSchema = new mongoose.Schema(
             trim: true,
         },
         questions: [QuestionSchema],
-
-        // 🔑 Exam/Quiz specific fields
-        totalMarks: {
-            type: Number,
-            default: 0,
-        },
-        passingMarks: {
-            type: Number,
-            default: 0,
-        },
-        duration: {
-            type: Number, // in minutes
-            required: true,
-        },
-        startTime: {
-            type: Date,
-        },
-        endTime: {
-            type: Date,
-        },
-
-        // Unique exam/game code
-        examCode: {
+        gameCode: {
             type: String,
             required: true,
             unique: true,
             trim: true,
-        },
-
-        // Track creator
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
         },
     },
     { timestamps: true }
