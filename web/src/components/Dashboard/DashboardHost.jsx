@@ -79,6 +79,7 @@ export default function HostDashboard() {
     return (
         <HostLayout>
             <div className="p-6 space-y-8">
+                <p>{token}</p>
                 {/* --- Stats Cards --- */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <StatCard icon={<Gamepad2 />} title="Games Created" value={stats?.gameCount || 0} color="blue" />

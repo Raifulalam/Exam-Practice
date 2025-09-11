@@ -17,6 +17,10 @@ const QuestionSchema = new mongoose.Schema({
         type: String,
         trim: true, // Correct answer for quiz
     },
+    explanation: {
+        type: String,
+        required: true,
+    }
 });
 
 // -------------------- Game Schema --------------------
