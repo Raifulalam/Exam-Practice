@@ -17,6 +17,7 @@ import AttemptGame from "./components/PlayerDashboard/Attemptgames";
 import MyAttempts from "./components/PlayerDashboard/MyScore";
 import CreatePracticeSetModal from "./components/PlayerDashboard/CreatePracticeSetModel";
 import PlayerLeaderboard from "./components/PlayerDashboard/Leaderboard";
+import AdminBulkEmail from "./components/Dashboard/AdminmailController";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Route path="/attempt/:gameCode" element={<AttemptGame />} />
           <Route path="/myattempt" element={<MyAttempts />} />
           <Route path="/create-practice" element={<CreatePracticeSetModal />} />
+          <Route path="/sendmail" element={<AdminBulkEmail />} />
 
         </Routes>
       </Router>

@@ -162,6 +162,7 @@ export default function AttemptGame() {
             )}
 
             {/* Feedback after submission */}
+            {/* Feedback after submission */}
             {feedback && (
                 <div className="space-y-4">
                     {allQuestions.map((q, idx) => {
@@ -185,11 +186,19 @@ export default function AttemptGame() {
                                         </span>
                                     )}
                                 </p>
+
+                                {/* 🔥 Show explanation */}
+                                {q.explanation && (
+                                    <p className="mt-2 text-gray-600 text-sm sm:text-base">
+                                        <strong>Explanation:</strong> {q.explanation}
+                                    </p>
+                                )}
                             </div>
                         );
                     })}
                 </div>
             )}
+
 
             {/* Submit button */}
             {!feedback && (

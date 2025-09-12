@@ -13,6 +13,7 @@ import {
     Users,
     Menu,
     X,
+    MailIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -85,6 +86,14 @@ export default function HostSidebar() {
                         label="Analytics"
                         onClick={() => {
                             navigate("/analytics");
+                            setIsOpen(false);
+                        }}
+                    />
+                    <SidebarButton
+                        icon={<MailIcon />}
+                        label="Send Mail"
+                        onClick={() => {
+                            navigate("/sendmail");
                             setIsOpen(false);
                         }}
                     />
