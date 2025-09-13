@@ -120,7 +120,7 @@ export default function Analytics() {
 
     return (
         <HostLayout>
-            <div className="p-6">
+            <div className="">
                 <h2 className="text-3xl font-bold mb-8 text-gray-800">
                     📊 Detailed Analytics
                 </h2>

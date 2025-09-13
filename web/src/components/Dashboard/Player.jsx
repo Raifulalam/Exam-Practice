@@ -54,7 +54,7 @@ export default function PlayerLeaderboard() {
 
                 {/* 🏆 Top 3 Winners Podium */}
                 {topThree.length > 0 && (
-                    <div className="flex flex-col md:flex-row justify-center items-end gap-6 mb-10">
+                    <div className="flex  md:flex-row justify-center items-end gap-6 mb-10">
                         {topThree.map((player, index) => (
                             <div
                                 key={player.playerId}

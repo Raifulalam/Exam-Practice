@@ -1,0 +1,194 @@
+/* --- General Card Styles --- */
+.bg-white {
+    background-color: #fff;
+}
+
+.shadow-lg {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.rounded-2xl {
+    border-radius: 1rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.p-6 {
+    padding: 1.5rem;
+}
+
+/* --- Grid Layout --- */
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .col-span-2 {
+        grid-column: span 2;
+    }
+
+    .col-span-3 {
+        grid-column: span 3;
+    }
+}
+
+/* --- Mobile Adjustments --- */
+@media (max-width: 767px) {
+    .p-6 {
+        padding: 1rem;
+    }
+
+    .p-4 {
+        padding: 0.75rem;
+    }
+
+    h1.text-3xl {
+        font-size: 1.5rem;
+    }
+
+    h2.text-xl {
+        font-size: 1.125rem;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        /* Single column for mobile */
+    }
+
+    .col-span-2,
+    .col-span-3 {
+        grid-column: span 1;
+    }
+
+    /* Chart container responsive height */
+    .h-64 {
+        height: 200px;
+    }
+
+    /* Adjust recent attempts cards */
+    .space-y-2>div {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.5rem;
+    }
+
+    .space-y-2>div span {
+        font-size: 0.875rem;
+    }
+
+    /* Reduce trophy card padding for mobile */
+    .mt-6 {
+        margin-top: 1rem;
+    }
+
+    .mt-2 {
+        margin-top: 0.25rem;
+    }
+}
+
+/* --- Responsive Line Chart Container --- */
+.responsive-chart {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* --- General Card Styles --- */
+.bg-white {
+    background-color: #fff;
+}
+
+.shadow-lg {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.rounded-2xl {
+    border-radius: 1rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.p-6 {
+    padding: 1.5rem;
+}
+
+.space-y-6>*+* {
+    margin-top: 1.5rem;
+}
+
+/* --- Grid Layout --- */
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .md\:col-span-2 {
+        grid-column: span 2;
+    }
+}
+
+/* --- Responsive Chart --- */
+.responsive-chart {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* --- Mobile Adjustments --- */
+@media (max-width: 767px) {
+    .p-6 {
+        padding: 1rem;
+    }
+
+    .p-4 {
+        padding: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.125rem;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .md\:col-span-2 {
+        grid-column: span 1;
+    }
+
+    .flex-col {
+        flex-direction: column;
+    }
+
+    .space-y-2>div {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.5rem;
+    }
+
+    .space-y-2>div span {
+        font-size: 0.875rem;
+    }
+}
