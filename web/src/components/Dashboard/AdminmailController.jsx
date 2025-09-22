@@ -33,7 +33,7 @@ export default function AdminBulkEmail() {
 
         setLoading(true);
         try {
-            const res = await axios.post("/api/admin/send-bulk-email", { subject, message });
+            const res = await axios.post("https://exam-practice-1.onrender.com/api/admin/send-bulk-email", { subject, message });
 
             if (res.data && res.data.success) {
                 setSuccessMsg(res.data.msg || "Emails queued/sent successfully.");
